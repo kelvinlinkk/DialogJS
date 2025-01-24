@@ -1,0 +1,6 @@
+[show]Once upon a time, there was a small village nestled in the mountains.[bg sunset cover]
+The villagers lived peacefully,[n] tending to their gardens and livestock.[bg 0 cover]
+123[audio bg1 Music play 0 10000]
+One day, a traveler arrived, weary from his journey.[img img1 bocchi 0 0 0 0 0 0][img img1 bocchi 0 0 0 100 100 1]
+He brought tales of distant lands and adventures that captivated the villagers.
+However, he also spoke of a great danger approaching their peaceful home.
