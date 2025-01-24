@@ -1,6 +1,9 @@
-[show]Once upon a time, there was a small village nestled in the mountains.[bg sunset cover]
-The villagers lived peacefully,[n] tending to their gardens and livestock.[bg 0 cover]
-123[audio bg1 Music play 0 10000]
-One day, a traveler arrived, weary from his journey.[img img1 bocchi 0 0 0 0 0 0][img img1 bocchi 0 0 0 100 100 1]
-He brought tales of distant lands and adventures that captivated the villagers.
-However, he also spoke of a great danger approaching their peaceful home.
+[show](click to continue)
+[bg sunset.jpg cover][img bocchi bocchi.jpg 710 290 0 500 500 1][audio Music Music.mp3 play 60 0]In a distant galaxy, a brave explorer named Bocchi set out on an adventure to discover new worlds.
+As Bocchi navigated through the stars, she encountered a beautiful planet covered in lush hills.
+[bg resize.jpg cover]The hills were alive with vibrant colors, and Bocchi felt a sense of wonder as she landed her ship.
+Suddenly, she spotted a mysterious light in the distance. What could it be?
+[bg sunset.jpg cover]With courage in her heart, Bocchi decided to investigate the source of the light.
+As she approached, she realized it was a portal to another dimension!
+(Written by ChatGPT)
+[hide]
