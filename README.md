@@ -81,8 +81,6 @@ Music and images should be stored in the `resources` folder for system access.
 
 - **Process Logic**: Supports the creation of conditional statements and loops, enabling the development of more intricate narrative structures and player interactions.
 
-- **Custom Font and Color Scheme**: Allows developers to personalize the visual appearance of the dialogue system by applying custom font styles and color schemes.
-
 ## Contribute
 
 We're always open to feedback, bug reports, and contributions. If you've found an issue or have an idea for making DialogJS better, go ahead and submit a pull request. Your help is super important in making DialogJS more awesome!
