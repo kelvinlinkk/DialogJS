@@ -1,6 +1,3 @@
-// Constants
-
-
 class DialogSystem {
     constructor() {
         this.lineNum = 0;
@@ -13,7 +10,13 @@ class DialogSystem {
         this.dialog = document.createElement("div");
         document.getElementsByTagName("main")[0].appendChild(this.dialog);
         this.dialog.id = "dialog";
-        this.dialog.appendChild(document.createElement("p"));
+        this.dialogBox = this.dialog.appendChild(document.createElement("p"));
+        this.dialogBoxImg = this.dialog.appendChild(document.createElement("img"));
+        this.dialogBoxImg.id = "dialogBoxImg";
+        //set appearance
+        this.dialog.style.fontFamily = "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif";
+        this.dialog.style.color = "aliceblue";
+        this.dialogBox.style.backgroundColor = "#00000060";
 
         this.background = this.createElement('img', 'bg');
         this.imgfile = this.createElement('span', 'imgfile');
@@ -82,12 +85,28 @@ class DialogSystem {
     commandHandler(com) {
         let params = com.split(" ");
         switch (params[0]) {
+            case 'setting':
+                // [setting font color background]
+                this.dialog.style.fontFamily = params[1] ?params[1]:"'Segoe UI', Tahoma, Geneva, Verdana, sans-serif";
+                this.dialog.style.color = params[2] ?params[2]:"aliceblue";
+                this.dialogBox.style.backgroundColor = params[3] ?params[3]:"#00000060";
+                if(params[4]){
+                    this.dialogBoxImg.visibility = "visible";
+                    this.dialogBoxImg.src = "resources/" + params[4];
+                    this.dialogBox.style.backgroundColor = "00000000";
+                }else{
+                    this.dialogBoxImg.visibility = "hidden";
+                }
+                break;
             case 'show':
                 // [show]
                 this.dialog.style.display = 'initial';
                 break;
             case 'hide':
                 // [hide]
+                for(let audioName in this.audios) {
+                    this.audios[audioName].pause();
+                }
                 this.dialog.style.display = 'none';
                 break;
             case 'n':

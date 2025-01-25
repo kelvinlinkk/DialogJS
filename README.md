@@ -40,6 +40,10 @@ Music and images should be stored in the `resources` folder for system access.
 
 **DialogJS** provides several commands to enhance your interactive dialogue system: use `[show]` to display the dialog box, `[hide]` to conceal it, and `[n]` to insert a line break. Change the background image with `[bg]`, where the first parameter is the image source and the second is the object-fit style. To display images, use `[img]`, and for audio playback, utilize `[audio]`, which allows for duration and fade-in/out effects.
 
+### setting
+> [ setting font-family color dialog-background-color dialog-background-img ]
+* Customizes the font and the dialog box.
+
 ### show
 > [ show ]
 - Displays the dialog box.
@@ -58,6 +62,11 @@ Music and images should be stored in the `resources` folder for system access.
 ### audio
 >[ audio name src play time(s) fade(ms) ]
 - Plays an audio file with options for duration and fade-in/out effects.
+
+## Update log
+### v0.1
+- mute the audio when [ hide ]
+- add command [ setting ] to personalize the appearance
 
 ## TODO
 ### New Commands

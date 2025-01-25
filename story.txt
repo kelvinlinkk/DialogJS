@@ -1,4 +1,4 @@
-[show](click to continue)
+[show][setting 0 0 0 bocchi.jpg](click to continue)
 [bg sunset.jpg cover][img bocchi bocchi.jpg 710 290 0 500 500 1][audio Music Music.mp3 play 60 0]In a distant galaxy, a brave explorer named Bocchi set out on an adventure to discover new worlds.
 As Bocchi navigated through the stars, she encountered a beautiful planet covered in lush hills.
 [bg resize.jpg cover]The hills were alive with vibrant colors, and Bocchi felt a sense of wonder as she landed her ship.
