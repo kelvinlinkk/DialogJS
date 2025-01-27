@@ -44,10 +44,9 @@ Music and images should be stored in the `resources` folder for system access.
 > [ setting font-family color dialog-background-color dialog-background-img ]
 * Customizes the font and the dialog box.
 
-### show
+### display (show and hide)
 > [ show ]
 - Displays the dialog box.
-### hide
 > [ hide ]
 - Hides the dialog box.
 ### newline
@@ -63,10 +62,21 @@ Music and images should be stored in the `resources` folder for system access.
 >[ audio name src play time(s) fade(ms) ]
 - Plays an audio file with options for duration and fade-in/out effects.
 
+### Variables (setVar and showVar)
+> [setVar variable-name value]
+* Assigns a value to a variable
+
+> [showVar variable-name]
+* Retrieves and displays the value of a variable
+
 ## Update log
 ### v0.1
-- mute the audio when [ hide ]
-- add command [ setting ] to personalize the appearance
+- Mute the audio when [ hide ]
+- Add command [ setting ] to personalize the appearance
+### v0.2
+- Provide [ setVar ] and [ showVar ] for users to customize variables.
+- Implement user interaction through click and space key to continue the dialog.
+
 
 ## TODO
 ### New Commands
@@ -75,11 +85,14 @@ Music and images should be stored in the `resources` folder for system access.
 - [ particle ] : This command can be used to create effects such as wind, rain, shooting stars, or other visual elements.
 
 ### functions
-- **Variables**: Enables the use of custom variables within the dialogue system.
 
 - **Buttons**: Facilitates player interaction by allowing them to respond to prompts.
 
 - **Process Logic**: Supports the creation of conditional statements and loops, enabling the development of more intricate narrative structures and player interactions.
+
+- **Input Box**: Allows players to enter text responses during the dialogue.
+
+- **Customizable Key Binding**: Enables players to assign their preferred keys to specific actions.
 
 ## Contribute
 

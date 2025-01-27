@@ -6,6 +6,7 @@ class DialogSystem {
 
         this.audios = {};
         this.imgs = {};
+        this.vars = {};
 
         this.dialog = document.createElement("div");
         document.getElementsByTagName("main")[0].appendChild(this.dialog);
@@ -43,6 +44,13 @@ class DialogSystem {
                 this.showWords(this.lineNum);
             }
         });
+        document.addEventListener("keydown",(n)=>{
+            if(n.key == " " && !this.isLocked && this.lineNum < this.text.length)
+                {
+                    this.isLocked = true;
+                    this.showWords(this.lineNum);
+                }
+        })
     }
 
     createElement(tag, id) {
@@ -183,6 +191,14 @@ class DialogSystem {
             case 'effect':
                 // [effect]
                 break;
+            case "setVar":
+                // [setVar name val]
+                this.vars[params[1]] = params.slice(2).join(" "); // 合併第2項以後的所有項目
+                break;
+            case "showVar":
+                // [showVar name]
+                return this.vars[params[1]];
+
         }
         return "";
     }
