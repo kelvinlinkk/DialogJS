@@ -76,6 +76,7 @@ Music and images should be stored in the `resources` folder for system access.
 ### v0.2
 - Provide [ setVar ] and [ showVar ] for users to customize variables.
 - Implement user interaction through click and space key to continue the dialog.
+- A line with only commands will no longer be regarded as a line.
 
 
 ## TODO

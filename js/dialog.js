@@ -28,16 +28,8 @@ class DialogSystem {
         this.stylesheet.href = "resources/appearance.css";
 
         // 讀取txt檔案
-        fetch('story.txt')
-            .then(response => response.text())
-            .then(data => {
-                // 將文字分割成行
-                this.text = data.split('\n').filter(line => line.trim() !== '');
-                // 開始顯示第一行
-                this.showWords(this.lineNum);
-            })
-            .catch(error => console.error('Error loading story:', error));
-
+        this.loadStory("story.txt");
+        
         this.dialog.addEventListener('click', () => {
             if (!this.isLocked && this.lineNum < this.text.length) {
                 this.isLocked = true;
@@ -52,7 +44,18 @@ class DialogSystem {
                 }
         })
     }
-
+    loadStory(filename) {
+        fetch(filename)
+            .then(response => response.text())
+            .then(data => {
+            // 將文字分割成行
+            this.text = data.split('\r\n').filter(line => line.trim() !== '');
+            // 開始顯示第一行
+            this.showWords(this.lineNum);
+            })
+            .catch(error => console.error('Error loading story:', error));
+    }
+    
     createElement(tag, id) {
         const element = document.createElement(tag);
         element.id = id;
@@ -64,17 +67,17 @@ class DialogSystem {
     async showWords(num) {
         let words = this.text[num].split(""),
             display = "",
-            isLock = false,
+            flag = false,
             bracketContent = "";
-
         for (let word of words) {
-            if (word == "[") {
-                isLock = true;
+            if (word == "[" && !flag) {
+                flag = true;
                 bracketContent = "";
                 continue;
-            } else if (isLock) {
+            } else if (flag) {
                 if (word == "]") {
-                    isLock = false;
+                    flag = false;
+                    //在這裡可以處理跳轉
                     word = this.commandHandler(bracketContent);
                 } else {
                     bracketContent += word;
@@ -83,43 +86,57 @@ class DialogSystem {
             }
             display += word;
             await new Promise(r => setTimeout(r, 10));
-            this.dialog.getElementsByTagName("p")[0].innerHTML = display;
+            this.dialogBox.innerHTML = display;
         }
-        this.isLocked = false;
         this.lineNum += 1;
+        if(display == ""){
+            this.showWords(num+1);
+        }else{
+            this.isLocked = false;
+        }
+        
     }
 
     // Handle [] commands
     commandHandler(com) {
-        let params = com.split(" ");
+        const params = com.split(" ");
+        
         switch (params[0]) {
+            case '[':
+                return "[";
+                
             case 'setting':
                 // [setting font color background]
-                this.dialog.style.fontFamily = params[1] ?params[1]:"'Segoe UI', Tahoma, Geneva, Verdana, sans-serif";
-                this.dialog.style.color = params[2] ?params[2]:"aliceblue";
-                this.dialogBox.style.backgroundColor = params[3] ?params[3]:"#00000060";
-                if(params[4]){
+                this.dialog.style.fontFamily = params[1] ? params[1] : "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif";
+                this.dialog.style.color = params[2] ? params[2] : "aliceblue";
+                this.dialogBox.style.backgroundColor = params[3] ? params[3] : "#00000060";
+                
+                if (params[4]) {
                     this.dialogBoxImg.visibility = "visible";
                     this.dialogBoxImg.src = "resources/" + params[4];
                     this.dialogBox.style.backgroundColor = "00000000";
-                }else{
+                } else {
                     this.dialogBoxImg.visibility = "hidden";
                 }
                 break;
+
             case 'show':
                 // [show]
                 this.dialog.style.display = 'initial';
                 break;
+
             case 'hide':
                 // [hide]
-                for(let audioName in this.audios) {
+                for (let audioName in this.audios) {
                     this.audios[audioName].pause();
                 }
                 this.dialog.style.display = 'none';
                 break;
+
             case 'n':
                 // [newline]
                 return '<br>';
+
             case 'bg':
                 // background src object-fit
                 if (params[1] == 0) {
@@ -130,12 +147,14 @@ class DialogSystem {
                     this.background.style.objectFit = params[2];
                 }
                 break;
+
             case 'img':
                 // [img name src x y z width height show]
                 let img = this.imgs[params[1]] ? this.imgs[params[1]] : document.createElement('img');
                 // 創建圖片元素
                 this.imgfile.appendChild(img);
                 img.src = "resources/" + params[2];
+                
                 // Set image styles (1920x1080 grid)
                 Object.assign(img.style, {
                     left: parseFloat(params[3]) / 1920 * 100 + '%',
@@ -143,63 +162,73 @@ class DialogSystem {
                     width: parseFloat(params[6]) / 1920 * 100 + '%',
                     height: parseFloat(params[7]) / 1080 * 100 + '%'
                 });
+                
                 img.style.zIndex = parseFloat(params[5]);
                 this.imgs[params[1]] = img; // 將圖片元素和參數存入字典
+                
                 if (params[8] == '0') {
                     this.imgs[params[1]].style.display = "none";
                 } else {
-                    img.style.display = "initial" // 開始顯示圖片
+                    img.style.display = "initial"; // 開始顯示圖片
                 }
                 break;
+
             case 'audio':
                 // [audio name src play time(s) fade(ms)]
                 if (params[3] == 'play') {
                     let audio = document.createElement('audio'); // 創建音頻元素
-                    audio.style.visibility = "hidden0;"
+                    audio.style.visibility = "hidden0;";
                     this.audiofile.appendChild(audio);
                     audio.src = "resources/" + params[2];
                     audio.play(); // 開始播放音頻
                     this.audios[params[1]] = audio; // 將音頻元素和參數存入字典
+                    
                     if (params[4] != 0) {
-                        setInterval(() => { this.audios[params[1]].pause(); }, parseInt(params[4]) * 1000)
+                        setInterval(() => { this.audios[params[1]].pause(); }, parseInt(params[4]) * 1000);
                     }
+                    
                     if (params[5] != 0) {
-                        let volumeIncrement = parseInt(params[5])/100;
+                        let volumeIncrement = parseInt(params[5]) / 100;
                         this.audios[params[1]].volume = 0;
+                        
                         for (let i = 0; i < 100; i++) {
                             setTimeout(() => {
                                 this.audios[params[1]].volume += 0.01;
-                            }, i*volumeIncrement);
+                            }, i * volumeIncrement);
                         }
                     }
                 } else {
                     if (params[5] != 0) {
-                        let volumeIncrement = parseInt(params[5])/100;
+                        let volumeIncrement = parseInt(params[5]) / 100;
                         this.audios[params[1]].volume = 1;
+                        
                         for (let i = 0; i < 100; i++) {
                             setTimeout(() => {
                                 this.audios[params[1]].volume -= 0.01;
-                            }, i*volumeIncrement);
+                            }, i * volumeIncrement);
                         }
-                        setInterval(()=>{this.audios[params[2]].pause();},parseInt(params[5]))
-                    }else{
+                        
+                        setInterval(() => { this.audios[params[2]].pause(); }, parseInt(params[5]));
+                    } else {
                         this.audios[params[2]].pause(); 
                     }
-
                 }
                 break;
+
             case 'effect':
                 // [effect]
                 break;
+
             case "setVar":
                 // [setVar name val]
                 this.vars[params[1]] = params.slice(2).join(" "); // 合併第2項以後的所有項目
                 break;
+
             case "showVar":
                 // [showVar name]
                 return this.vars[params[1]];
-
         }
+        
         return "";
     }
 }
