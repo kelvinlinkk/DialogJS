@@ -1,20 +1,30 @@
 class DialogSystem {
-    constructor() {
-        this.lineNum = 0;
-        this.isLocked = true;
-        this.text = []; // 清空初始對話
-
+    constructor(filename) {
         this.audios = {};
         this.imgs = {};
         this.vars = {};
 
+        // 創建對話框元素
+        this.createDialogElements();
+
+        // 設置樣式
+        this.setDialogStyles();
+
+        // 讀取txt檔案
+        this.loadStory(filename);
+    }
+
+    createDialogElements() {
         this.dialog = document.createElement("div");
         document.getElementsByTagName("main")[0].appendChild(this.dialog);
         this.dialog.id = "dialog";
         this.dialogBox = this.dialog.appendChild(document.createElement("p"));
         this.dialogBoxImg = this.dialog.appendChild(document.createElement("img"));
         this.dialogBoxImg.id = "dialogBoxImg";
-        //set appearance
+    }
+
+    setDialogStyles() {
+        // 設置對話框的外觀
         this.dialog.style.fontFamily = "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif";
         this.dialog.style.color = "aliceblue";
         this.dialogBox.style.backgroundColor = "#00000060";
@@ -26,25 +36,13 @@ class DialogSystem {
         this.stylesheet = document.head.appendChild(document.createElement("link"));
         this.stylesheet.rel = "stylesheet";
         this.stylesheet.href = "resources/appearance.css";
-
-        // 讀取txt檔案
-        this.loadStory("story.txt");
-        
-        this.dialog.addEventListener('click', () => {
-            if (!this.isLocked && this.lineNum < this.text.length) {
-                this.isLocked = true;
-                this.showWords(this.lineNum);
-            }
-        });
-        document.addEventListener("keydown",(n)=>{
-            if(n.key == " " && !this.isLocked && this.lineNum < this.text.length)
-                {
-                    this.isLocked = true;
-                    this.showWords(this.lineNum);
-                }
-        })
     }
+
     loadStory(filename) {
+        this.lineNum = 0;
+        this.isLocked = true;
+        this.text = []; // 清空初始對話
+
         fetch(filename)
             .then(response => response.text())
             .then(data => {
@@ -54,6 +52,20 @@ class DialogSystem {
             this.showWords(this.lineNum);
             })
             .catch(error => console.error('Error loading story:', error));
+        
+            this.dialog.addEventListener('click', () => {
+                if (!this.isLocked && this.lineNum < this.text.length) {
+                    this.isLocked = true;
+                    this.showWords(this.lineNum);
+                }
+            });
+            document.addEventListener("keydown",(n)=>{
+                if(n.key == " " && !this.isLocked && this.lineNum < this.text.length)
+                    {
+                        this.isLocked = true;
+                        this.showWords(this.lineNum);
+                    }
+            })
     }
     
     createElement(tag, id) {
@@ -78,7 +90,15 @@ class DialogSystem {
                 if (word == "]") {
                     flag = false;
                     //在這裡可以處理跳轉
-                    word = this.commandHandler(bracketContent);
+                    if(bracketContent.split(" ")[0] == "goto"){
+                        this.loadStory(bracketContent.split(" ")[1]);
+                        return;
+                    }
+                    else if(bracketContent.split(" ")[0] == "button"){
+                        return;
+                    }else{
+                        word = this.commandHandler(bracketContent);
+                    }
                 } else {
                     bracketContent += word;
                     continue;
