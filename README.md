@@ -96,7 +96,11 @@ Music and images should be stored in the `resources` folder for system access.
 
 - **Input Box**: Allows players to enter text responses during the dialogue.
 
+- **setting**: Sets all kinds of functions.
+
 - **Customizable Key Binding**: Enables players to assign their preferred keys to specific actions.
+
+- **log**: Enables players to review previous dialog.
 
 ## Contribute
 

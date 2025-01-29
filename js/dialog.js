@@ -3,8 +3,9 @@ class DialogSystem {
         this.variables = {};
 
         this.dialogBoxInstance = new dialogBox();
-        this.imgholder = new imageHolder();
-        this.audholder = new audioHolder();
+        this.imgContainer = new ImageContainer();
+        this.audContainer = new AudioContainer();
+        this.btnContainer = new ButtonContainer(); 
         this.setDialogElements();
 
         // 設置樣式
@@ -19,8 +20,9 @@ class DialogSystem {
         document.getElementsByTagName("main")[0].appendChild(this.dialog).id = "dialog";
         this.dialog.appendChild(this.dialogBoxInstance.getBox());
         this.dialog.appendChild(this.dialogBoxInstance.getImg());
-        this.dialog.appendChild(this.imgholder.getHolder());
-        this.dialog.appendChild(this.audholder.getHolder());
+        this.dialog.appendChild(this.imgContainer.getContainer());
+        this.dialog.appendChild(this.audContainer.getContainer());
+        this.dialog.appendChild(this.btnContainer.getContainer());
     }
 
     setDialogStyles() {
@@ -28,30 +30,30 @@ class DialogSystem {
         this.dialog.style.fontFamily = "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif";
         this.dialog.style.color = "aliceblue";
 
-        this.background = this.createElement('img', 'bg');
-        this.audiofile = this.createElement('span', 'audiofile');
+        this.background = document.createElement('img');
+        this.background.id = 'bg';
+        this.dialog.appendChild(this.background); // 將背景添加到對話框中
 
         this.stylesheet = document.head.appendChild(document.createElement("link"));
         this.stylesheet.rel = "stylesheet";
-        this.stylesheet.href = "resources/appearance.css";
+        this.stylesheet.href = "css/appearance.css";
     }
 
-    loadStory(filename) {
+    async loadStory(filename) {
         this.lineNum = 0;
         this.isLocked = true;
         this.text = []; // 清空初始對話
 
-        fetch(filename)
-            .then(response => response.text())
-            .then(data => {
-                // 將文字分割成行
-                this.text = data.split('\r\n').filter(line => line.trim() !== '');
-                // 開始顯示第一行
-                this.showWords(this.lineNum);
-            })
-            .catch(error => console.error('Error loading story:', error));
+        try {
+            const response = await fetch(filename);
+            const data = await response.text();
+            this.text = data.split('\r\n').filter(line => line.trim() !== '');
+            this.showWords(this.lineNum);
+        } catch (error) {
+            console.error('Error loading story:', error);
+        }
 
-        this.dialog.addEventListener('click', () => {
+        this.dialogBoxInstance.getBox().addEventListener('click', () => {
             if (!this.isLocked && this.lineNum < this.text.length) {
                 this.isLocked = true;
                 this.showWords(this.lineNum);
@@ -64,13 +66,6 @@ class DialogSystem {
                 this.showWords(this.lineNum);
             }
         });
-    }
-
-    createElement(tag, id) {
-        const element = document.createElement(tag);
-        element.id = id;
-        this.dialog.appendChild(element);
-        return element; // Return the created element for later use
     }
 
     // Show words individually
@@ -94,8 +89,16 @@ class DialogSystem {
                         this.loadStory(commandParts[1]);
                         return;
                     } else if (commandParts[0] === "button") {
+                        //buttonHolder
+                        let btn = this.btnContainer.addButton(commandParts[1], commandParts[2]);
+                        btn.addEventListener("click",()=>{
+                            this.loadStory(commandParts[3]);
+                            this.btnContainer.clearButton();});
+                        word = "";
+                    } else if(commandParts[0] === "showbutton"){
+                        this.btnContainer.showButton();
                         return;
-                    } else {
+                    }else {
                         word = this.commandHandler(bracketContent);
                     }
                 } else {
@@ -105,7 +108,8 @@ class DialogSystem {
             }
             display += word;
             await new Promise(r => setTimeout(r, 10));
-            this.dialogBoxInstance.setText(display);
+            if(display)
+                this.dialogBoxInstance.setText(display);
         }
         this.lineNum += 1;
         if (display === "") {
@@ -122,13 +126,13 @@ class DialogSystem {
         switch (params[0]) {
             case '[':
                 return "[";
-                
+
             case 'setting':
                 // [setting font color background]
                 this.dialog.style.fontFamily = params[1] || "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif";
                 this.dialog.style.color = params[2] || "aliceblue";
                 this.dialogBoxInstance.setColor(params[3] || "#00000060");
-                
+
                 if (params[4]) {
                     this.dialogBoxInstance.setImg(params[4]);
                 }
@@ -164,18 +168,18 @@ class DialogSystem {
 
             case 'img':
                 // [img name src x y z width height show]
-                let imgElement = this.imgholder.createObject(params[1], params[2]);
-                this.imgholder.setAppearance(params[1], { left: params[3], top: params[4], zIndex: params[5], width: params[6], height: params[7] });
+                let imgElement = this.imgContainer.addImg(params[1], params[2]);
+                this.imgContainer.setAppearance(params[1], { left: params[3], top: params[4], zIndex: params[5], width: params[6], height: params[7] });
                 imgElement.style.display = (params[8] == '0') ? "none" : "initial"; // 開始顯示圖片
                 break;
 
             case 'audio':
                 // [audio name src play time(s) fade(ms)]
-                this.audholder.createObject(params[1],params[2]); // 創建音效元素
+                this.audContainer.addAudio(params[1], params[2]); // 創建音效元素
                 if (params[3] === 'play') {
-                    this.audholder.audPlay(params[1],params[4],params[5]); // 開始播放音效
+                    this.audContainer.audPlay(params[1], params[4], params[5]); // 開始播放音效
                 } else {
-                    this.audholder.audStop(params[1],params[5]); // 結束播放音效
+                    this.audContainer.audStop(params[1], params[5]); // 結束播放音效
                 }
                 break;
 
@@ -192,7 +196,7 @@ class DialogSystem {
                 // [showVar name]
                 return this.variables[params[1]];
         }
-        
+
         return "";
     }
 }
@@ -224,16 +228,16 @@ class dialogBox {
     }
 }
 
-class imageHolder {
+class ImageContainer {
     constructor() {
         this.imageElements = {};
         this.imgfile = document.createElement("span");
         this.imgfile.id = "imgfile";
     }
-    getHolder(){
+    getContainer() {
         return this.imgfile;
     }
-    createObject(name, src) {
+    addImg(name, src) {
         if (this.imageElements[name]) {
             return this.imageElements[name];
         } else {
@@ -256,16 +260,16 @@ class imageHolder {
     }
 }
 
-class audioHolder {
+class AudioContainer {
     constructor() {
         this.audioElements = {};
         this.audfile = document.createElement("span");
         this.audfile.id = "audfile";
     }
-    getHolder() {
+    getContainer() {
         return this.audfile;
     }
-    createObject(name, src) {
+    addAudio(name, src) {
         if (this.audioElements[name]) {
             return this.audioElements[name];
         } else {
@@ -277,37 +281,64 @@ class audioHolder {
             return audioElement;
         }
     }
-    audPlay(name,time,fade){
+    audPlay(name, time, fade) {
         this.audioElements[name].play();
         if (time != 0) {
             setInterval(() => { this.audioElements[name].pause(); }, parseInt(time) * 1000);
         }
-        
+
         if (fade != 0) {
             let volumeIncrement = parseInt(fade) / 100;
             this.audioElements[name].volume = 0;
-            for (let i = 0; i < 99 - this.audioElements[name].volume*100; i++) {
-                
+            for (let i = 0; i < 99 - this.audioElements[name].volume * 100; i++) {
+
                 setTimeout(() => {
                     this.audioElements[name].volume += 0.01;
                 }, i * volumeIncrement);
             }
         }
     }
-    audStop(name,fade){
+    audStop(name, fade) {
         if (fade != 0) {
             let volumeIncrement = parseInt(fade) / 100;
             this.audioElements[name].volume = 1;
-            
-            for (let i = 0; i < this.audioElements[name].volume*99; i++) {
+
+            for (let i = 0; i < this.audioElements[name].volume * 99; i++) {
                 setTimeout(() => {
                     this.audioElements[name].volume -= 0.01;
                 }, i * volumeIncrement);
             }
-            
+
             setInterval(() => { this.audioElements[name].pause(); }, parseInt(fade));
         } else {
-            this.audioElements[name].pause(); 
+            this.audioElements[name].pause();
         }
+    }
+}
+
+class ButtonContainer {
+    constructor() {
+        this.buttonElements = {};
+        this.buttonsArea = document.createElement("div");
+        this.buttonsArea.id = "buttons";
+        this.clearButton();
+    }
+    getContainer(){
+        return this.buttonsArea;
+    }
+    addButton(name, text){
+        let newbutton = document.createElement('button');
+        newbutton.innerHTML = text;
+        this.buttonsArea.appendChild(newbutton);
+        this.buttonElements[name] = newbutton;
+        return newbutton;
+    }
+    showButton(){
+        this.buttonsArea.style.display = "initial";
+    }
+    clearButton(){
+        this.buttonsArea.style.display = "none";
+        this.buttonsArea.innerHTML = "";
+        this.buttonElements = {};
     }
 }
