@@ -14,5 +14,5 @@ Suddenly, she spotted a mysterious light in the distance. What could it be?
 With courage in her heart, [showVar mystring] decided to investigate the source of the light.
 As she approached, she realized it was a portal to another dimension!
 (Written by ChatGPT)
-[audio Music Music.mp3 stop 0 10000]
+[audio Music Music.mp3 stop 0 4000]
 [goto story2.txt]

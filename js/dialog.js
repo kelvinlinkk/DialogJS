@@ -286,8 +286,8 @@ class audioHolder {
         if (fade != 0) {
             let volumeIncrement = parseInt(fade) / 100;
             this.audioElements[name].volume = 0;
-            
-            for (let i = 0; i < 100 - this.audioElements[name].volume*100; i++) {
+            for (let i = 0; i < 99 - this.audioElements[name].volume*100; i++) {
+                
                 setTimeout(() => {
                     this.audioElements[name].volume += 0.01;
                 }, i * volumeIncrement);
@@ -299,7 +299,7 @@ class audioHolder {
             let volumeIncrement = parseInt(fade) / 100;
             this.audioElements[name].volume = 1;
             
-            for (let i = 0; i < 100 - this.audioElements[name].volume*100; i++) {
+            for (let i = 0; i < this.audioElements[name].volume*99; i++) {
                 setTimeout(() => {
                     this.audioElements[name].volume -= 0.01;
                 }, i * volumeIncrement);
