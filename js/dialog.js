@@ -1,11 +1,11 @@
 class DialogSystem {
     constructor(filename) {
-        this.audios = {};
-        this.imgs = {};
-        this.vars = {};
+        this.variables = {};
 
-        // 創建對話框元素
-        this.createDialogElements();
+        this.dialogBoxInstance = new dialogBox();
+        this.imgholder = new imageHolder();
+        this.audholder = new audioHolder();
+        this.setDialogElements();
 
         // 設置樣式
         this.setDialogStyles();
@@ -14,23 +14,21 @@ class DialogSystem {
         this.loadStory(filename);
     }
 
-    createDialogElements() {
+    setDialogElements() {
         this.dialog = document.createElement("div");
-        document.getElementsByTagName("main")[0].appendChild(this.dialog);
-        this.dialog.id = "dialog";
-        this.dialogBox = this.dialog.appendChild(document.createElement("p"));
-        this.dialogBoxImg = this.dialog.appendChild(document.createElement("img"));
-        this.dialogBoxImg.id = "dialogBoxImg";
+        document.getElementsByTagName("main")[0].appendChild(this.dialog).id = "dialog";
+        this.dialog.appendChild(this.dialogBoxInstance.getBox());
+        this.dialog.appendChild(this.dialogBoxInstance.getImg());
+        this.dialog.appendChild(this.imgholder.getHolder());
+        this.dialog.appendChild(this.audholder.getHolder());
     }
 
     setDialogStyles() {
         // 設置對話框的外觀
         this.dialog.style.fontFamily = "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif";
         this.dialog.style.color = "aliceblue";
-        this.dialogBox.style.backgroundColor = "#00000060";
 
         this.background = this.createElement('img', 'bg');
-        this.imgfile = this.createElement('span', 'imgfile');
         this.audiofile = this.createElement('span', 'audiofile');
 
         this.stylesheet = document.head.appendChild(document.createElement("link"));
@@ -46,28 +44,28 @@ class DialogSystem {
         fetch(filename)
             .then(response => response.text())
             .then(data => {
-            // 將文字分割成行
-            this.text = data.split('\r\n').filter(line => line.trim() !== '');
-            // 開始顯示第一行
-            this.showWords(this.lineNum);
+                // 將文字分割成行
+                this.text = data.split('\r\n').filter(line => line.trim() !== '');
+                // 開始顯示第一行
+                this.showWords(this.lineNum);
             })
             .catch(error => console.error('Error loading story:', error));
-        
-            this.dialog.addEventListener('click', () => {
-                if (!this.isLocked && this.lineNum < this.text.length) {
-                    this.isLocked = true;
-                    this.showWords(this.lineNum);
-                }
-            });
-            document.addEventListener("keydown",(n)=>{
-                if(n.key == " " && !this.isLocked && this.lineNum < this.text.length)
-                    {
-                        this.isLocked = true;
-                        this.showWords(this.lineNum);
-                    }
-            })
+
+        this.dialog.addEventListener('click', () => {
+            if (!this.isLocked && this.lineNum < this.text.length) {
+                this.isLocked = true;
+                this.showWords(this.lineNum);
+            }
+        });
+
+        document.addEventListener("keydown", (n) => {
+            if (n.key === " " && !this.isLocked && this.lineNum < this.text.length) {
+                this.isLocked = true;
+                this.showWords(this.lineNum);
+            }
+        });
     }
-    
+
     createElement(tag, id) {
         const element = document.createElement(tag);
         element.id = id;
@@ -81,22 +79,23 @@ class DialogSystem {
             display = "",
             flag = false,
             bracketContent = "";
+
         for (let word of words) {
-            if (word == "[" && !flag) {
+            if (word === "[" && !flag) {
                 flag = true;
                 bracketContent = "";
                 continue;
             } else if (flag) {
-                if (word == "]") {
+                if (word === "]") {
                     flag = false;
                     //在這裡可以處理跳轉
-                    if(bracketContent.split(" ")[0] == "goto"){
-                        this.loadStory(bracketContent.split(" ")[1]);
+                    const commandParts = bracketContent.split(" ");
+                    if (commandParts[0] === "goto") {
+                        this.loadStory(commandParts[1]);
                         return;
-                    }
-                    else if(bracketContent.split(" ")[0] == "button"){
+                    } else if (commandParts[0] === "button") {
                         return;
-                    }else{
+                    } else {
                         word = this.commandHandler(bracketContent);
                     }
                 } else {
@@ -106,37 +105,32 @@ class DialogSystem {
             }
             display += word;
             await new Promise(r => setTimeout(r, 10));
-            this.dialogBox.innerHTML = display;
+            this.dialogBoxInstance.setText(display);
         }
         this.lineNum += 1;
-        if(display == ""){
-            this.showWords(num+1);
-        }else{
+        if (display === "") {
+            this.showWords(num + 1);
+        } else {
             this.isLocked = false;
         }
-        
     }
 
     // Handle [] commands
-    commandHandler(com) {
-        const params = com.split(" ");
-        
+    commandHandler(command) {
+        const params = command.split(" ");
+
         switch (params[0]) {
             case '[':
                 return "[";
                 
             case 'setting':
                 // [setting font color background]
-                this.dialog.style.fontFamily = params[1] ? params[1] : "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif";
-                this.dialog.style.color = params[2] ? params[2] : "aliceblue";
-                this.dialogBox.style.backgroundColor = params[3] ? params[3] : "#00000060";
+                this.dialog.style.fontFamily = params[1] || "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif";
+                this.dialog.style.color = params[2] || "aliceblue";
+                this.dialogBoxInstance.setColor(params[3] || "#00000060");
                 
                 if (params[4]) {
-                    this.dialogBoxImg.visibility = "visible";
-                    this.dialogBoxImg.src = "resources/" + params[4];
-                    this.dialogBox.style.backgroundColor = "00000000";
-                } else {
-                    this.dialogBoxImg.visibility = "hidden";
+                    this.dialogBoxInstance.setImg(params[4]);
                 }
                 break;
 
@@ -147,8 +141,8 @@ class DialogSystem {
 
             case 'hide':
                 // [hide]
-                for (let audioName in this.audios) {
-                    this.audios[audioName].pause();
+                for (let audioName in this.audioElements) {
+                    this.audioElements[audioName].pause();
                 }
                 this.dialog.style.display = 'none';
                 break;
@@ -170,68 +164,18 @@ class DialogSystem {
 
             case 'img':
                 // [img name src x y z width height show]
-                let img = this.imgs[params[1]] ? this.imgs[params[1]] : document.createElement('img');
-                // 創建圖片元素
-                this.imgfile.appendChild(img);
-                img.src = "resources/" + params[2];
-                
-                // Set image styles (1920x1080 grid)
-                Object.assign(img.style, {
-                    left: parseFloat(params[3]) / 1920 * 100 + '%',
-                    top: parseFloat(params[4]) / 1080 * 100 + '%',
-                    width: parseFloat(params[6]) / 1920 * 100 + '%',
-                    height: parseFloat(params[7]) / 1080 * 100 + '%'
-                });
-                
-                img.style.zIndex = parseFloat(params[5]);
-                this.imgs[params[1]] = img; // 將圖片元素和參數存入字典
-                
-                if (params[8] == '0') {
-                    this.imgs[params[1]].style.display = "none";
-                } else {
-                    img.style.display = "initial"; // 開始顯示圖片
-                }
+                let imgElement = this.imgholder.createObject(params[1], params[2]);
+                this.imgholder.setAppearance(params[1], { left: params[3], top: params[4], zIndex: params[5], width: params[6], height: params[7] });
+                imgElement.style.display = (params[8] == '0') ? "none" : "initial"; // 開始顯示圖片
                 break;
 
             case 'audio':
                 // [audio name src play time(s) fade(ms)]
-                if (params[3] == 'play') {
-                    let audio = document.createElement('audio'); // 創建音頻元素
-                    audio.style.visibility = "hidden0;";
-                    this.audiofile.appendChild(audio);
-                    audio.src = "resources/" + params[2];
-                    audio.play(); // 開始播放音頻
-                    this.audios[params[1]] = audio; // 將音頻元素和參數存入字典
-                    
-                    if (params[4] != 0) {
-                        setInterval(() => { this.audios[params[1]].pause(); }, parseInt(params[4]) * 1000);
-                    }
-                    
-                    if (params[5] != 0) {
-                        let volumeIncrement = parseInt(params[5]) / 100;
-                        this.audios[params[1]].volume = 0;
-                        
-                        for (let i = 0; i < 100; i++) {
-                            setTimeout(() => {
-                                this.audios[params[1]].volume += 0.01;
-                            }, i * volumeIncrement);
-                        }
-                    }
+                this.audholder.createObject(params[1],params[2]); // 創建音效元素
+                if (params[3] === 'play') {
+                    this.audholder.audPlay(params[1],params[4],params[5]); // 開始播放音效
                 } else {
-                    if (params[5] != 0) {
-                        let volumeIncrement = parseInt(params[5]) / 100;
-                        this.audios[params[1]].volume = 1;
-                        
-                        for (let i = 0; i < 100; i++) {
-                            setTimeout(() => {
-                                this.audios[params[1]].volume -= 0.01;
-                            }, i * volumeIncrement);
-                        }
-                        
-                        setInterval(() => { this.audios[params[2]].pause(); }, parseInt(params[5]));
-                    } else {
-                        this.audios[params[2]].pause(); 
-                    }
+                    this.audholder.audStop(params[1],params[5]); // 結束播放音效
                 }
                 break;
 
@@ -241,14 +185,129 @@ class DialogSystem {
 
             case "setVar":
                 // [setVar name val]
-                this.vars[params[1]] = params.slice(2).join(" "); // 合併第2項以後的所有項目
+                this.variables[params[1]] = params.slice(2).join(" "); // 合併第2項以後的所有項目
                 break;
 
             case "showVar":
                 // [showVar name]
-                return this.vars[params[1]];
+                return this.variables[params[1]];
         }
         
         return "";
+    }
+}
+class dialogBox {
+    constructor() {
+        this.box = document.createElement("p");
+        this.img = document.createElement("img");
+        this.img.id = "dialogBoxImg";
+        this.setColor("#00000060");
+        this.img.style.visibility = "hidden";
+    }
+    getBox() {
+        return this.box;
+    }
+
+    getImg() {
+        return this.img;
+    }
+    setColor(color) {
+        this.img.style.visibility = "hidden";
+        this.box.style.backgroundColor = color;
+    }
+    setText(text) {
+        this.box.innerHTML = text;
+    }
+    setImg(source) {
+        this.img.src = `resources/${source}`;
+        this.img.style.visibility = "visible";
+    }
+}
+
+class imageHolder {
+    constructor() {
+        this.imageElements = {};
+        this.imgfile = document.createElement("span");
+        this.imgfile.id = "imgfile";
+    }
+    getHolder(){
+        return this.imgfile;
+    }
+    createObject(name, src) {
+        if (this.imageElements[name]) {
+            return this.imageElements[name];
+        } else {
+            let imgElement = document.createElement('img');
+            this.imgfile.appendChild(imgElement);
+            imgElement.src = "resources/" + src;
+            this.imageElements[name] = imgElement;
+            return imgElement;
+        }
+    }
+    setAppearance(name, { left, top, zIndex, width, height }) {
+        // Set image styles (1920x1080 grid)
+        Object.assign(this.imageElements[name].style, {
+            left: (parseFloat(left) / 1920 * 100) + '%',
+            top: (parseFloat(top) / 1080 * 100) + '%',
+            width: (parseFloat(width) / 1920 * 100) + '%',
+            height: (parseFloat(height) / 1080 * 100) + '%'
+        });
+        this.imageElements[name].style.zIndex = parseFloat(zIndex);
+    }
+}
+
+class audioHolder {
+    constructor() {
+        this.audioElements = {};
+        this.audfile = document.createElement("span");
+        this.audfile.id = "audfile";
+    }
+    getHolder() {
+        return this.audfile;
+    }
+    createObject(name, src) {
+        if (this.audioElements[name]) {
+            return this.audioElements[name];
+        } else {
+            let audioElement = document.createElement('audio');
+            this.audfile.appendChild(audioElement);
+            this.audfile.style.visibility = "hidden";
+            audioElement.src = "resources/" + src;
+            this.audioElements[name] = audioElement;
+            return audioElement;
+        }
+    }
+    audPlay(name,time,fade){
+        this.audioElements[name].play();
+        if (time != 0) {
+            setInterval(() => { this.audioElements[name].pause(); }, parseInt(time) * 1000);
+        }
+        
+        if (fade != 0) {
+            let volumeIncrement = parseInt(fade) / 100;
+            this.audioElements[name].volume = 0;
+            
+            for (let i = 0; i < 100 - this.audioElements[name].volume*100; i++) {
+                setTimeout(() => {
+                    this.audioElements[name].volume += 0.01;
+                }, i * volumeIncrement);
+            }
+        }
+    }
+    audStop(name,fade){
+        if (fade != 0) {
+            let volumeIncrement = parseInt(fade) / 100;
+            this.audioElements[name].volume = 1;
+            
+            for (let i = 0; i < 100 - this.audioElements[name].volume*100; i++) {
+                setTimeout(() => {
+                    this.audioElements[name].volume -= 0.01;
+                }, i * volumeIncrement);
+            }
+            
+            setInterval(() => { this.audioElements[name].pause(); }, parseInt(fade));
+        } else {
+            this.audioElements[name].pause(); 
+        }
     }
 }

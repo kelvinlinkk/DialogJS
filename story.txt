@@ -4,7 +4,7 @@
 [setVar mystring Gimmy Wang]
 (click to continue)
 [bg sunset.jpg cover]
-[img bocchi bocchi.jpg 710 290 0 500 500 1]
+[img bocchi bocchi.jpg 710 290 1 500 500 1]
 [audio Music Music.mp3 play 60 0]
 In a distant galaxy, a brave explorer named [showVar mystring] set out on an adventure to discover new worlds.
 As [showVar mystring] navigated through the stars, she encountered a beautiful planet covered in lush hills.
@@ -14,4 +14,5 @@ Suddenly, she spotted a mysterious light in the distance. What could it be?
 With courage in her heart, [showVar mystring] decided to investigate the source of the light.
 As she approached, she realized it was a portal to another dimension!
 (Written by ChatGPT)
+[audio Music Music.mp3 stop 0 10000]
 [goto story2.txt]
