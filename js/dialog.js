@@ -5,7 +5,7 @@ class DialogSystem {
         this.dialogBoxInstance = new dialogBox();
         this.imgContainer = new ImageContainer();
         this.audContainer = new AudioContainer();
-        this.btnContainer = new ButtonContainer(); 
+        this.btnContainer = new ButtonContainer();
         this.setDialogElements();
 
         // 設置樣式
@@ -91,8 +91,8 @@ class DialogSystem {
                             return;
                         case "showbutton":
                             let storyname = await this.btnContainer.showButton();
-                            if(storyname != "undefined"){this.loadStory(storyname);return;}
-                            word = "";break;
+                            if (storyname != "undefined") { this.loadStory(storyname); return; }
+                            word = ""; break;
                         default:
                             word = this.commandHandler(bracketContent);
                             break;
@@ -104,7 +104,7 @@ class DialogSystem {
             }
             display += word;
             await new Promise(r => setTimeout(r, 10));
-            if(display)
+            if (display)
                 this.dialogBoxInstance.setText(display);
         }
         this.lineNum += 1;
@@ -193,7 +193,7 @@ class DialogSystem {
                 return this.variables[params[1]];
 
             case "button":
-                this.btnContainer.addButton(params[1],params[2],params[3]); 
+                this.btnContainer.addButton(params[1], params[2]);
                 break;
         }
 
@@ -318,9 +318,9 @@ class AudioContainer {
 
 class ButtonContainer {
     constructor() {
-        this.buttonElements = {};
         this.buttonsArea = document.createElement("div");
         this.buttonsArea.id = "buttons";
+        this.setAppearance();
         this.clearButton();
     }
 
@@ -328,12 +328,16 @@ class ButtonContainer {
         return this.buttonsArea;
     }
 
-    addButton(name, text, src) {
+    setAppearance(){
+        this.buttonsArea.style.backgroundColor = "#00000068";
+    }
+
+    addButton(text, src) {
         let newButton = document.createElement('button');
         newButton.innerHTML = text;
         newButton.classList.add(src);
         this.buttonsArea.appendChild(newButton);
-        this.buttonElements[name] = newButton;
+        this.buttonElements.push(newButton);
         return newButton;
     }
 
@@ -342,17 +346,45 @@ class ButtonContainer {
 
         // Create a Promise that resolves when a button is clicked
         return new Promise((resolve) => {
+            let select = -1;
+            document.addEventListener("wheel",()=>{
+                if(select>=Array.from(this.buttonsArea.children).length-1){
+                    select = 0;
+                }else{
+                    select+=1;
+                }
+            });
+            document.addEventListener("keydown",(n)=>{
+                if((n.key==="Enter" || n.key === " ") && select!=-1){
+                    resolve(Array.from(this.buttonsArea.children)[select].className);
+                    this.clearButton();
+                }},{once:true});
             for (let btn of this.buttonsArea.children) {
+                let num = Array.from(this.buttonsArea.children).indexOf(btn);
                 btn.addEventListener("mouseenter", () => {
-                    btn.style.background = "#ff0000"; // Highlight on hover
+                    select = num;
                 });
 
                 btn.addEventListener("mouseleave", () => {
-                    btn.style.background = "#ffffff"; // Reset on mouse leave
+                    select = -1;btn.style.background = "#111111";
                 });
+                this.buttonsArea.addEventListener("mousemove",()=>{
+                    if(select==num){
+                        btn.style.background = "#555555";
+                    }else{
+                        btn.style.background = "#111111";
+                    }
+                })
+                document.addEventListener("wheel",()=>{
+                    if(select==num){
+                        btn.style.background = "#555555";
+                    }else{
+                        btn.style.background = "#111111";
+                    }
+                })
 
                 btn.addEventListener("click", () => {
-                    resolve(btn.className); 
+                    resolve(btn.className);
                     this.clearButton();
                 });
             }
@@ -365,11 +397,12 @@ class ButtonContainer {
             if (this.buttonElements[name]) {
                 this.buttonsArea.removeChild(this.buttonElements[name]);
                 delete this.buttonElements[name];
+                this.buttonsArea.style.display="none";
             }
         } else {
             // Clear all buttons
             this.buttonsArea.innerHTML = "";
-            this.buttonElements = {};
+            this.buttonElements = [];
         }
     }
 }

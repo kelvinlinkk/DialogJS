@@ -72,6 +72,10 @@ Music and images should be stored in the `resources` folder for system access.
 ### Script Flow(goto and button)
 > [ goto filename ]
 * This command is used to navigate to a different part of the script. The parameter `filename` should be the name of the file to navigate to.
+> [ button text src ]
+* This command allows user to create a button as a tool to read other scripts.
+> [ showbutton ]
+* Displays all the buttons and clear up afterward, able to choose the options by clicking or scrolling + Enter/Space.
 
 ## Update log
 ### v0.1
@@ -81,7 +85,7 @@ Music and images should be stored in the `resources` folder for system access.
 - Introduce [ setVar ] and [ showVar ] for variable customization.
 - Enable user interaction through click and space key for dialog progression.
 - Exclude lines containing only commands from being considered as lines.
-- Incorporate the [ goto ] command for script navigation.
+- Incorporate the [ goto ] command and buttons for script navigation.
 
 
 ## TODO
@@ -92,11 +96,9 @@ Music and images should be stored in the `resources` folder for system access.
 
 ### functions
 
-- **Buttons**: Facilitates player interaction by allowing them to respond to prompts.
-
 - **Input Box**: Allows players to enter text responses during the dialogue.
 
-- **setting**: Sets all kinds of functions.
+- **setting**: ⚙ Setting.
 
 - **Customizable Key Binding**: Enables players to assign their preferred keys to specific actions.
 
