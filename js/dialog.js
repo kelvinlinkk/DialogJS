@@ -85,21 +85,17 @@ class DialogSystem {
                     flag = false;
                     //在這裡可以處理跳轉
                     const commandParts = bracketContent.split(" ");
-                    if (commandParts[0] === "goto") {
-                        this.loadStory(commandParts[1]);
-                        return;
-                    } else if (commandParts[0] === "button") {
-                        //buttonHolder
-                        let btn = this.btnContainer.addButton(commandParts[1], commandParts[2]);
-                        btn.addEventListener("click",()=>{
-                            this.loadStory(commandParts[3]);
-                            this.btnContainer.clearButton();});
-                        word = "";
-                    } else if(commandParts[0] === "showbutton"){
-                        this.btnContainer.showButton();
-                        return;
-                    }else {
-                        word = this.commandHandler(bracketContent);
+                    switch (commandParts[0]) {
+                        case "goto":
+                            this.loadStory(commandParts[1]);
+                            return;
+                        case "showbutton":
+                            let storyname = await this.btnContainer.showButton();
+                            if(storyname != "undefined"){this.loadStory(storyname);return;}
+                            word = "";break;
+                        default:
+                            word = this.commandHandler(bracketContent);
+                            break;
                     }
                 } else {
                     bracketContent += word;
@@ -195,6 +191,10 @@ class DialogSystem {
             case "showVar":
                 // [showVar name]
                 return this.variables[params[1]];
+
+            case "button":
+                this.btnContainer.addButton(params[1],params[2],params[3]); 
+                break;
         }
 
         return "";
@@ -323,22 +323,53 @@ class ButtonContainer {
         this.buttonsArea.id = "buttons";
         this.clearButton();
     }
-    getContainer(){
+
+    getContainer() {
         return this.buttonsArea;
     }
-    addButton(name, text){
-        let newbutton = document.createElement('button');
-        newbutton.innerHTML = text;
-        this.buttonsArea.appendChild(newbutton);
-        this.buttonElements[name] = newbutton;
-        return newbutton;
+
+    addButton(name, text, src) {
+        let newButton = document.createElement('button');
+        newButton.innerHTML = text;
+        newButton.classList.add(src);
+        this.buttonsArea.appendChild(newButton);
+        this.buttonElements[name] = newButton;
+        return newButton;
     }
-    showButton(){
-        this.buttonsArea.style.display = "initial";
+
+    async showButton() {
+        this.buttonsArea.style.display = "initial"; // Show the buttons
+
+        // Create a Promise that resolves when a button is clicked
+        return new Promise((resolve) => {
+            for (let btn of this.buttonsArea.children) {
+                btn.addEventListener("mouseenter", () => {
+                    btn.style.background = "#ff0000"; // Highlight on hover
+                });
+
+                btn.addEventListener("mouseleave", () => {
+                    btn.style.background = "#ffffff"; // Reset on mouse leave
+                });
+
+                btn.addEventListener("click", () => {
+                    resolve(btn.className); 
+                    this.clearButton();
+                });
+            }
+        });
     }
-    clearButton(){
-        this.buttonsArea.style.display = "none";
-        this.buttonsArea.innerHTML = "";
-        this.buttonElements = {};
+
+    clearButton(name) {
+        if (name) {
+            // Clear a specific button if needed
+            if (this.buttonElements[name]) {
+                this.buttonsArea.removeChild(this.buttonElements[name]);
+                delete this.buttonElements[name];
+            }
+        } else {
+            // Clear all buttons
+            this.buttonsArea.innerHTML = "";
+            this.buttonElements = {};
+        }
     }
 }
