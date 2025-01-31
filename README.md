@@ -85,7 +85,8 @@ Music and images should be stored in the `resources` folder for system access.
 - Introduce [ setVar ] and [ showVar ] for variable customization.
 - Enable user interaction through click and space key for dialog progression.
 - Exclude lines containing only commands from being considered as lines.
-- Incorporate the [ goto ] command and buttons for script navigation.
+### v0.3
+- Incorporate the [ goto ] command and [ button ] commands for script navigation.
 
 
 ## TODO
