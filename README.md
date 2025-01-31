@@ -5,6 +5,7 @@
 - [Setup](#setup)
 - [Commands](#commands)
 - [TODO](#todo)
+- [Update](#update-log)
 - [Contribute](#contribute)
 
 ## Introduction
@@ -53,8 +54,16 @@ Music and images should be stored in the `resources` folder for system access.
 > [ n ]
 - Inserts a line break in the dialog.
 ### background
-> [ b src object-fit ]
--  Changes the background image. The first parameter is the image source, and the second is the object-fit style.
+> [ bg source fit-style ]
+- Changes the background image of the dialog system
+- `source`: Path to the image file (relative to resources folder)
+- `fit-style`: CSS object-fit value (cover, contain, fill, etc.)
+
+Examples:
+```markdown
+[bg forest.jpg cover]
+[bg castle.png contain]
+```
 ### image
 > [ img name src x y z width height show ]
 - Displays an image with specified parameters.
