@@ -2,7 +2,7 @@
 [show]
 [button story1]
 [button story2 story2.txt]
-[setting 0 0 0 bocchi.jpg]
+[setting 0 aliceblue 0 bocchi.jpg]
 (click to continue)
 [showbutton]
 [bg sunset.jpg cover]

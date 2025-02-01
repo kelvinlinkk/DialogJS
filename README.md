@@ -1,3 +1,84 @@
+# DialogJS Documentation
+
+A lightweight JavaScript library for creating interactive dialogue systems in games.
+
+## Table of Contents
+1. [Overview](#overview)
+2. [Core Features](#core-features)
+3. [Getting Started](#getting-started)
+    - [Installation](#installation)
+    - [Basic Setup](#basic-setup)
+4. [Story Formats](#story-formats)
+    - [Text File Format](#text-file-format)
+    - [Dictionary Format](#dictionary-format)
+5. [Commands](#commands)
+    - [Display Commands](#display-commands)
+    - [Media Commands](#media-commands)
+    - [Flow Control](#flow-control)
+6. [Examples](#examples)
+7. [API Reference](#api-reference)
+8. [Troubleshooting](#troubleshooting)
+
+## Overview
+DialogJS is a JavaScript-based dialogue management system that enables developers to create rich, interactive narrative experiences. It supports text display, image handling, audio playback, and branching dialogue paths.
+
+## Core Features
+- Text-based dialogue management
+- Image and background display
+- Audio playback with fade effects
+- Variable system for state management
+- Branching dialogue paths
+- Interactive button system
+- Input handling system
+- Character speaker system
+
+## File Structure
+- `dialog.js` - Main library file
+- `resources/` - Directory for storing media assets
+- Story files (`.txt` or JavaScript objects)
+
+## Key Components
+
+### Dialog Display
+- Show/hide dialogue box
+- Custom styling support
+- Line break control
+- Previous dialogue recall (using 'l' key)
+
+### Media Management
+- Background image control with fit options
+- Image display with positioning
+- Audio playback with fade effects
+- Resource preloading support
+
+### Interaction System
+- Click/Space progression
+- Button-based choices
+- Text input handling
+- Variable management
+- Script navigation
+
+### Customization
+- Font family
+- Color schemes
+- Dialog box appearance
+- Character speakers
+
+## Version History
+- v0.1: Basic audio and appearance customization
+- v0.2: Variable system and interaction improvements
+- v0.3: Script navigation and button system
+- v0.4: Text input and history feature
+
+## Future Development
+- Effect system for image/audio manipulation
+- Particle system for visual effects
+- Inventory/backpack system
+
+## Requirements
+- Modern web browser
+- JavaScript enabled
+- Proper file structure with resources directory
 # DialogJS (experimental)
 
 ## Table of Contents
@@ -25,12 +106,21 @@
 For experienced developers, adjustments can be made to meet specific needs.
 
 ### Usage
-To create your interactive dialogue system, start by writing your script in a file named `story.txt`. 
+You can create your interactive dialogue system using either:
+1. Text Files (`.txt`)
+    *  To create your interactive dialogue system, start by writing your script in a text file (like `story.txt` or `story2.txt`). 
+    *  Remember, each non-command line in your story file represents a single paragraph in your game's narrative.
+   * Command lines start with `[` and end with `]`.
+2. JavaScript Dictionary Object
 
->Remember, each line in `story.txt` represents a single paragraph in your game's narrative. 
+    * We also allow user to put their story in a dictionary, like this:
+     ```javascript
+         const story = {"name":["line1","line2"]}
+     ```
+ 
 
-This file will contain the narrative of your game, including character dialogues, scene descriptions, and [commands](#commands) to control the visual and audio elements. 
-Use the commands listed below to enhance your story with features such as displaying [images](#image), playing [audio](#audio), and managing the dialogue box.
+
+The system supports story branching through the `[button]` and `[goto]` commands, allowing you to split your narrative across multiple files.It also contains the narrative of your game, including character dialogues, scene descriptions, and [commands](#commands) to control the visual and audio elements.Please use the commands listed below to enhance your story with features such as displaying [images](#image), playing [audio](#audio), and managing the dialogue box.
 
 **Note**: To further enhance the narrative in `story.txt`, HTML elements can be incorporated. For font size adjustments, it is recommended to use the `em` unit, a relative font size measurement.
 
@@ -50,9 +140,9 @@ Please press `l` to read previous dialog.
 
 ### display (show and hide)
 > [ show ]
-- Displays the dialog box.
+- Displays the dialog system.
 > [ hide ]
-- Hides the dialog box.
+- Hides the dialog system(not just the box).
 ### newline
 > [ n ]
 - Inserts a line break in the dialog.
@@ -109,6 +199,7 @@ Examples:
 ### v0.4
 - Add text input to increase players' gaming experience.
 - Add 'l' key to read previous texts.
+- Allows local accessment by js dictionary.
 
 
 ## TODO
@@ -118,9 +209,7 @@ Examples:
 - [ particle ] : This command can be used to create effects such as wind, rain, shooting stars, or other visual elements.
 
 ### functions
-- **setting**: ⚙ Setting.
-
-- **Customizable Key Binding**: Enables players to assign their preferred keys to specific actions.
+- **backpack**: filled with an array of objects. 
 
 ## Contribute
 

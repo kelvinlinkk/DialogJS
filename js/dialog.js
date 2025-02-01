@@ -1,71 +1,54 @@
 class DialogSystem {
     constructor(filename) {
+        //initial
         this.variables = {};
         this.speaker = "someone";
         this.dialog = document.createElement("div");
-        document.getElementsByTagName("main")[0].appendChild(this.dialog).id = "dialog";
+        document.querySelector("main").appendChild(this.dialog).id = "dialog";
 
+        //綁定dialogBox、img、audio、btn
         this.dialogBoxInstance = new dialogBox();
         this.imgContainer = new ImageContainer();
         this.audContainer = new AudioContainer();
         this.btnContainer = new ButtonContainer();
-        this.setDialogElements();
-
-        // 設置樣式
-        this.setDialogStyles();
-
-        // 讀取txt檔案
-        this.loadStory(filename);
-    }
-
-    setDialogElements() {
         this.dialog.appendChild(this.imgContainer.getContainer());
         this.dialog.appendChild(this.audContainer.getContainer());
         this.dialog.appendChild(this.btnContainer.getContainer());
-    }
 
-    setDialogStyles() {
-        // 設置對話框的外觀
-        Object.assign(this.dialog.style, {
-            fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-            color: "aliceblue"
-        });
+        //set up dialog elements
+        this.background =
+            Object.assign(this.dialog.appendChild(document.createElement('img')), {id: 'bg'});
 
-        this.background = Object.assign(document.createElement('img'), {
-            id: 'bg'
-        });
-        this.dialog.appendChild(this.background);
-
-        this.stylesheet = Object.assign(document.createElement("link"), {
-            rel: "stylesheet",
-            href: "css/appearance.css"
-        });
-        document.head.appendChild(this.stylesheet);
-
-        this.dialogHistory = Object.assign(document.createElement("article"),{
-            id: "dialogHistory"
-        })
-        this.dialog.appendChild(this.dialogHistory);
+        this.dialogHistory =
+            Object.assign(this.dialog.appendChild(document.createElement("article")), {id: "dialogHistory"})
+        document.head.appendChild(
+            Object.assign(document.createElement("link"), {rel: "stylesheet",href: "css/appearance.css"}));
+        
         document.addEventListener("keydown", (n) => {
-            if(n.key === "l"){
-                this.dialogHistory.style.display = 
-                this.dialogHistory.style.display === "none" ? "initial" : "none";
+            if (n.key === "l") {
+                this.dialogHistory.style.display =
+                    this.dialogHistory.style.display === "none" ? "initial" : "none";
             }
         });
+
+        // load txt file
+        this.loadStory(filename);
     }
 
     async loadStory(filename) {
         this.lineNum = 0;
         this.isLocked = true;
-        this.text = []; // 清空初始對話
-
+        this.text = []; 
+        
+        //fetch file or usethe backup ones
         try {
             const response = await fetch(filename);
             const data = await response.text();
             this.text = data.replace(/\r\n|\r|\n/g, '\n').split('\n').filter(line => line.trim() !== '');
             this.showWords(this.lineNum);
         } catch (error) {
-            console.error('Error loading story:', error);
+            this.text = story[filename.split(".")[0]];
+            this.showWords(this.lineNum);
         }
 
         this.dialogBoxInstance.getBox().addEventListener('click', () => {
@@ -109,8 +92,8 @@ class DialogSystem {
                             if (storyname != "undefined") { this.loadStory(storyname); return; }
                             word = ""; break;
                         case "input":
-                            this.variables[commandParts[1]] =  
-                            String(await this.dialogBoxInstance.getMessage(commandParts[2])).replace(/[^\w\u4E00-\u9FFF_]/g,"");
+                            this.variables[commandParts[1]] =
+                                String(await this.dialogBoxInstance.getMessage(commandParts[2])).replace(/[^\w\u4E00-\u9FFF_]/g, "");
                             word = ""; break;
                         default:
                             word = this.commandHandler(bracketContent);
@@ -208,19 +191,19 @@ class DialogSystem {
             case "setVar":
                 // [setVar name val]
                 this.variables[params[1]] = String(params.slice(2).join(" "))
-                    .replace(/[^\w\u4E00-\u9FFF_]/g,"");  // Remove HTML tags
+                    .replace(/[^\w\u4E00-\u9FFF_]/g, "");  // Remove HTML tags
                 break;
 
             case "showVar":
                 // [showVar name]
                 return this.variables[params[1]];
 
-            
+
             case "speaker":
                 // [speaker isvariable txt/variable]
-                if(params[1] == 1){
+                if (params[1] == 1) {
                     this.speaker = this.variables[params[2]];
-                }else{
+                } else {
                     this.speaker = params[2];
                 }
                 break;
