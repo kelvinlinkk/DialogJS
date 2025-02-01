@@ -37,6 +37,9 @@ Use the commands listed below to enhance your story with features such as displa
 ### File Management
 Music and images should be stored in the `resources` folder for system access.
 
+### Keys
+Please press `l` to read previous dialog.
+
 ## Commands
 
 **DialogJS** provides several commands to enhance your interactive dialogue system: use `[show]` to display the dialog box, `[hide]` to conceal it, and `[n]` to insert a line break. Change the background image with `[bg]`, where the first parameter is the image source and the second is the object-fit style. To display images, use `[img]`, and for audio playback, utilize `[audio]`, which allows for duration and fade-in/out effects.
@@ -72,11 +75,14 @@ Examples:
 - Plays an audio file with options for duration and fade-in/out effects.
 
 ### Variables (setVar and showVar)
-> [setVar variable-name value ]
-* Assigns a value to a variable
+> [ setVar variable-name value ]
+* Assigns a value to a variable.
 
 > [ showVar variable-name ]
-* Retrieves and displays the value of a variable
+* Retrieves and displays the value of a variable.
+
+> [ input variable-name text]
+* displays an input box and provide with dirextion text.
 
 ### Script Flow(goto and button)
 > [ goto filename ]
@@ -84,7 +90,11 @@ Examples:
 > [ button text src ]
 * This command allows user to create a button as a tool to read other scripts.
 > [ showbutton ]
-* Displays all the buttons and clear up afterward, able to choose the options by clicking or scrolling + Enter/Space.
+* Displays all buttons and clears them afterward, allowing users to select options by clicking or using the keyboard (scrolling with W/S or Up/Down keys, and confirming with Enter/Space).
+
+### Characters
+>[ speaker isvariable name ]
+* Use the command to assign the speaker of the texts.
 
 ## Update log
 ### v0.1
@@ -96,6 +106,9 @@ Examples:
 - Exclude lines containing only commands from being considered as lines.
 ### v0.3
 - Incorporate the [ goto ] command and [ button ] commands for script navigation.
+### v0.4
+- Add text input to increase players' gaming experience.
+- Add 'l' key to read previous texts.
 
 
 ## TODO
@@ -105,14 +118,9 @@ Examples:
 - [ particle ] : This command can be used to create effects such as wind, rain, shooting stars, or other visual elements.
 
 ### functions
-
-- **Input Box**: Allows players to enter text responses during the dialogue.
-
 - **setting**: ⚙ Setting.
 
 - **Customizable Key Binding**: Enables players to assign their preferred keys to specific actions.
-
-- **log**: Enables players to review previous dialog.
 
 ## Contribute
 
