@@ -24,6 +24,7 @@ class DialogSystem {
         document.head.appendChild(
             Object.assign(document.createElement("link"), {rel: "stylesheet",href: "css/appearance.css"}));
         
+        //press l to read log
         document.addEventListener("keydown", (n) => {
             if (n.key === "l") {
                 this.dialogHistory.style.display =
@@ -50,7 +51,7 @@ class DialogSystem {
             this.text = story[filename.split(".")[0]];
             this.showWords(this.lineNum);
         }
-
+        //click or press space to continue
         this.dialogBoxInstance.getBox().addEventListener('click', () => {
             if (!this.isLocked && this.lineNum < this.text.length) {
                 this.isLocked = true;
@@ -73,15 +74,17 @@ class DialogSystem {
             flag = false,
             bracketContent = "";
 
+        //handle words    
         for (let word of words) {
             if (word === "[" && !flag) {
+                //collect command
                 flag = true;
                 bracketContent = "";
                 continue;
             } else if (flag) {
                 if (word === "]") {
+                    //execute command
                     flag = false;
-                    //在這裡可以處理跳轉
                     const commandParts = bracketContent.split(" ");
                     switch (commandParts[0]) {
                         case "goto":
@@ -93,7 +96,7 @@ class DialogSystem {
                             word = ""; break;
                         case "input":
                             this.variables[commandParts[1]] =
-                                String(await this.dialogBoxInstance.getMessage(commandParts[2])).replace(/[^\w\u4E00-\u9FFF_]/g, "");
+                                String(await this.dialogBoxInstance.getMessage(String(commandParts.slice(2).join(" ")))).replace(/[^\w\u4E00-\u9FFF_]/g, "");
                             word = ""; break;
                         default:
                             word = this.commandHandler(bracketContent);
@@ -110,6 +113,7 @@ class DialogSystem {
                 this.dialogBoxInstance.setText(display);
         }
         this.lineNum += 1;
+        //detect empty line(only command)
         if (display === "") {
             this.showWords(num + 1);
         } else {
@@ -134,7 +138,7 @@ class DialogSystem {
                 this.dialog.style.color = params[2] || "aliceblue";
                 this.dialogBoxInstance.setColor(params[3] || "#00000060");
 
-                if (params[4]) {
+                if (params[4] === "") {
                     this.dialogBoxInstance.setImg(params[4]);
                 }
                 break;
@@ -209,8 +213,10 @@ class DialogSystem {
                 break;
 
             case "button":
-                this.btnContainer.addButton(params[1], params[2]);
+                this.btnContainer.addButton(params[1], String(params.slice(2).join(" ")));
                 break;
+            default:
+                return String(params.slice(2).join(""));
         }
 
         return "";
@@ -388,7 +394,7 @@ class ButtonContainer {
         this.buttonsArea.style.backgroundColor = "#00000068";
     }
 
-    addButton(text, src) {
+    addButton(src, text) {
         let newButton = document.createElement('button');
         newButton.innerHTML = text;
         newButton.classList.add(src);
@@ -414,11 +420,14 @@ class ButtonContainer {
             };
 
             document.addEventListener("wheel", handleWheelEvent, true);
-            document.addEventListener("keydown", (n) => {
+            document.addEventListener("keydown",(n)=>{
                 if ((n.key === "Enter" || n.key === " ") && select != -1) {
                     resolve(Array.from(this.buttonsArea.children)[select].className);
-                    this.clearButton(); return;
-                } else if (n.key === "ArrowUp" || n.key === "ArrowDown") {
+                    this.clearButton();
+                }
+            },{once:true})
+            document.addEventListener("keydown", (n) => {
+                if (n.key === "ArrowUp" || n.key === "ArrowDown") {
                     handleWheelEvent(n.key === "ArrowDown");
                 } else if (n.key === "w" || n.key === "s") {
                     handleWheelEvent(n.key === "s");
@@ -461,4 +470,47 @@ class ButtonContainer {
             this.buttonElements = [];
         }
     }
+}
+const story = {
+    "story": [
+        "[[]",
+        "[show]",
+        "[button story1]",
+        "[button story2 story2.txt]",
+        "[setting 0 aliceblue 0 bocchi.jpg]",
+        "(click to continue)",
+        "[showbutton]",
+        "[bg sunset.jpg cover]",
+        "[img bocchi bocchi.jpg 710 290 1 500 500 1]",
+        "[audio Music Music.mp3 play 60 0]",
+        "[input mystring 請輸入姓名]",
+        "[speaker 1 mystring]",
+        "In a distant galaxy, a brave explorer named [showVar mystring] set out on an adventure to discover new worlds.",
+        "As [showVar mystring] navigated through the stars, she encountered a beautiful planet covered in lush hills.",
+        "[bg resize.jpg cover]The hills were alive with vibrant colors, and [showVar mystring] felt a sense of wonder as she landed her ship.",
+        "Suddenly, she spotted a mysterious light in the distance. What could it be?",
+        "[bg sunset.jpg cover]",
+        "With courage in her heart, [showVar mystring] decided to investigate the source of the light.",
+        "As she approached, she realized it was a portal to another dimension!",
+        "(Written by ChatGPT)",
+        "[audio Music Music.mp3 stop 0 4000]",
+        "[goto story2.txt]"
+    ],
+"story2": [
+    "[show]",
+    "Once upon a time, in a magical forest, there lived a kind-hearted rabbit named Benny. Benny loved to help his friends and explore the wonders of the forest.",
+    "",
+    "One sunny day, Benny found a sparkling stream. As he approached, he noticed a little bird trapped in some vines. \"Don't worry, I'll help you!\" Benny said. He carefully untangled the vines, and the bird chirped happily, \"Thank you, Benny! I can now fly again!\"",
+    "",
+    "To show his gratitude, the bird invited Benny to a secret party in the heart of the forest that evening. Benny was thrilled and hopped along to prepare for the celebration.",
+    "[audio 123 Music.mp3 play 0 0]",
+    "",
+    "As night fell, Benny arrived at the party, where all his friends were gathered. They danced under the stars, shared stories, and enjoyed delicious treats. Benny felt grateful for his friends and the magic of the forest.",
+    "[audio 123 Music.mp3 stop 0 0]",
+    "",
+    "From that day on, Benny and the little bird became the best of friends, and they had many more adventures together, spreading kindness and joy throughout the magical forest.",
+    "",
+    "[hide]",
+    "The end."
+]
 }

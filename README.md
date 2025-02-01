@@ -122,7 +122,7 @@ You can create your interactive dialogue system using either:
 
 The system supports story branching through the `[button]` and `[goto]` commands, allowing you to split your narrative across multiple files.It also contains the narrative of your game, including character dialogues, scene descriptions, and [commands](#commands) to control the visual and audio elements.Please use the commands listed below to enhance your story with features such as displaying [images](#image), playing [audio](#audio), and managing the dialogue box.
 
-**Note**: To further enhance the narrative in `story.txt`, HTML elements can be incorporated. For font size adjustments, it is recommended to use the `em` unit, a relative font size measurement.
+**Note**: To further enhance the narrative in `story.txt`, HTML elements can be incorporated. For font size adjustments, it is recommended to use the `em` unit, a relative font size measurement.Also, you don't need to use the `"` in your commands.
 
 ### File Management
 Music and images should be stored in the `resources` folder for system access.
@@ -133,6 +133,10 @@ Please press `l` to read previous dialog.
 ## Commands
 
 **DialogJS** provides several commands to enhance your interactive dialogue system: use `[show]` to display the dialog box, `[hide]` to conceal it, and `[n]` to insert a line break. Change the background image with `[bg]`, where the first parameter is the image source and the second is the object-fit style. To display images, use `[img]`, and for audio playback, utilize `[audio]`, which allows for duration and fade-in/out effects.
+
+> * Please use `[[]` to display a `[` character, as `[` is treated as a command. To print a `[` character, use `[[]n]`, which will output `[n]`. For a new line, simply use `[n]`. 
+>
+> * Additionally, do not include quotation marks in your commands, as they will be displayed directly.
 
 ### setting
 > [ setting font-family color dialog-background-color dialog-background-img ]
@@ -145,7 +149,8 @@ Please press `l` to read previous dialog.
 - Hides the dialog system(not just the box).
 ### newline
 > [ n ]
-- Inserts a line break in the dialog.
+- Inserts break in a line between words in the dialog box.For example:
+  'first line[ n ]second line'
 ### background
 > [ bg source fit-style ]
 - Changes the background image of the dialog system
@@ -177,7 +182,7 @@ Examples:
 ### Script Flow(goto and button)
 > [ goto filename ]
 * This command is used to navigate to a different part of the script. The parameter `filename` should be the name of the file to navigate to.
-> [ button text src ]
+> [ button src text ]
 * This command allows user to create a button as a tool to read other scripts.
 > [ showbutton ]
 * Displays all buttons and clears them afterward, allowing users to select options by clicking or using the keyboard (scrolling with W/S or Up/Down keys, and confirming with Enter/Space).
