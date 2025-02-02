@@ -96,7 +96,7 @@ DialogJS is a JavaScript-based dialogue management system that enables developer
 ### Integration
 **Integrating** [DialogJS](#introduction) into your website([example](https://kelvinlinkk.github.io/dialog/dialog.html)) is a relatively simple process. To begin, simply add the following HTML line to your project:
 ```html
-    <script src="js/dialog.js">const dialogSystem = new DialogSystem();</script>
+    <script src="js/dialog.js">const dialogSystem = new DialogSystem("first story.txt");</script>
 ```
 **Advice**: It is recommended to preload your resources (images and audio) to ensure a smooth experience. You can do this by adding the following lines in your HTML:
 ```html
@@ -191,6 +191,16 @@ Examples:
 >[ speaker isvariable name ]
 * Use the command to assign the speaker of the texts.
 
+### effects
+> [ move name deltaX deltaY time(s) ]
+* Use the command to move the self-defined images.
+> [ scale name deltaX deltaY time(s) ]
+* Use the command to scale the images.
+> [ skew degX degY time(s) ] 
+* Use the command to skew the images.
+> [ [[]rotate deg time(s)] ]
+* Use the command to rotate the images.
+
 ## Update log
 ### v0.1
 - Mute the audio when [ hide ]
@@ -209,8 +219,6 @@ Examples:
 
 ## TODO
 ### New Commands
-- [ effect ] : This command enables users to manipulate images or modify audio files.
-
 - [ particle ] : This command can be used to create effects such as wind, rain, shooting stars, or other visual elements.
 
 ### functions

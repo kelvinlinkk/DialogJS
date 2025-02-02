@@ -19,6 +19,14 @@ Time for some media commands!
 
 [img bocchi bocchi.jpg 20 20 1 300 300 true]
 [[]img name src x y z width height show] displays images
+[move bocchi 50 50 1]
+[[]move name deltaX deltaY time(s)] moves images
+[scale bocchi 1.2 1.8 1]
+[[]scale name deltaX deltaY time(s)] scales images
+[skew bocchi 20 10 1]
+[[]skew degX degY time(s)] skews images
+[rotate bocchi 40 1]
+[[]rotate deg time(s)] rotates images
 
 [audio bgm Music.mp3 play 30 2000]
 [[]audio name src play time fade] plays music
