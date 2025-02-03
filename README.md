@@ -5,19 +5,16 @@ A lightweight JavaScript library for creating interactive dialogue systems in ga
 ## Table of Contents
 1. [Overview](#overview)
 2. [Core Features](#core-features)
-3. [Getting Started](#getting-started)
-    - [Installation](#installation)
-    - [Basic Setup](#basic-setup)
-4. [Story Formats](#story-formats)
-    - [Text File Format](#text-file-format)
-    - [Dictionary Format](#dictionary-format)
-5. [Commands](#commands)
-    - [Display Commands](#display-commands)
-    - [Media Commands](#media-commands)
-    - [Flow Control](#flow-control)
-6. [Examples](#examples)
-7. [API Reference](#api-reference)
-8. [Troubleshooting](#troubleshooting)
+3. [File Structure](#file-structure)
+4. [Key Components](#key-components)
+5. [Version History](#version-history)
+6. [Future Development](#future-development)
+7. [Requirements](#requirements)
+8. [Setup](#setup)
+9. [Commands](#commands)
+10. [Update](#update-log)
+11. [TODO](#todo)
+12. [Contribute](#contribute)
 
 ## Overview
 DialogJS is a JavaScript-based dialogue management system that enables developers to create rich, interactive narrative experiences. It supports text display, image handling, audio playback, and branching dialogue paths.
@@ -94,7 +91,7 @@ DialogJS is a JavaScript-based dialogue management system that enables developer
 
 ## Setup
 ### Integration
-**Integrating** [DialogJS](#introduction) into your website([example](https://kelvinlinkk.github.io/dialog/dialog.html)) is a relatively simple process. To begin, simply add the following HTML line to your project:
+**Integrating** [DialogJS](#introduction) into your website([example](https://kelvinlinkk.github.io/dialog/demo.html)) is a relatively simple process. To begin, simply add the following HTML line to your project:
 ```html
     <script src="js/dialog.js">const dialogSystem = new DialogSystem("first story.txt");</script>
 ```
@@ -180,12 +177,56 @@ Examples:
 * displays an input box and provide with dirextion text.
 
 ### Script Flow(goto and button)
+#### Using Commands
 > [ goto filename ]
 * This command is used to navigate to a different part of the script. The parameter `filename` should be the name of the file to navigate to.
 > [ button src text ]
 * This command allows user to create a button as a tool to read other scripts.
+* For user who prefer coding, the `src` part is the return value when youclick the button.
 > [ showbutton ]
 * Displays all buttons and clears them afterward, allowing users to select options by clicking or using the keyboard (scrolling with W/S or Up/Down keys, and confirming with Enter/Space).
+
+#### Using code
+
+To control story flow programmatically in the `DialogSystem`, you can use several key methods:
+
+##### Key Methods
+- `loadStory(filename)`: Loads and processes a story file
+  - `filename`: String - Path to the story file to load
+
+- `addButton(src, text)`: Creates a choice button
+  - `src`: String - Story file name or identifier to load when clicked
+  - `text`: String - Button text to display
+
+- `showButton()`: Shows all created buttons and returns a Promise that resolves with the chosen button's src when clicked
+  - Returns: Promise<string> - Resolves with the selected button's src value
+
+- `clearButton()`: Removes all buttons from display
+
+##### Example Flow Control
+```javascript
+const dialogSystem = new DialogSystem();
+
+// Create choice buttons
+dialogSystem.addButton("path1.txt", "Go left");
+dialogSystem.addButton("path2.txt", "Go right");
+
+// Show buttons and handle selection
+const choice = await dialogSystem.showButton();
+
+// Load the chosen path
+dialogSystem.loadStory(choice);
+```
+or in the main() of the class DialogSystem:
+```javascript
+class DialogSystem {
+    //constructor(){}
+    main(){
+        this.loadStory("demo.txt");
+        //...
+    }
+}
+```
 
 ### Characters
 >[ speaker isvariable name ]
@@ -215,6 +256,7 @@ Examples:
 - Add text input to increase players' gaming experience.
 - Add 'l' key to read previous texts.
 - Allows local accessment by js dictionary.
+- Allows developer programing the main logic.
 
 
 ## TODO
