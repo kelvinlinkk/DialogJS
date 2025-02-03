@@ -257,6 +257,7 @@ class DialogSystem {
 - Add 'l' key to read previous texts.
 - Allows local accessment by js dictionary.
 - Allows developer programing the main logic.
+- Includes transform() and move() functions.
 
 
 ## TODO
@@ -265,6 +266,7 @@ class DialogSystem {
 
 ### functions
 - **backpack**: filled with an array of objects. 
+- **overflow** img to address.
 
 ## Contribute
 
