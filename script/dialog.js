@@ -1,13 +1,11 @@
 class DialogSystem {
     constructor() {
         //initial
-        this.variables = {};
         this.speaker = "someone";
         this.dialog = document.createElement("div");
         document.querySelector("main").appendChild(this.dialog).id = "dialog";
         this.dialog.style.display = 'none';
         this.isDisplaying = false;
-        this.showingButtons = false; // Add this flag
 
         //綁定dialogBox、img、audio、btn
         this.dialogBoxInstance = new dialogBox();
@@ -19,51 +17,52 @@ class DialogSystem {
         this.dialog.appendChild(this.btnContainer.getContainer());
 
         //set up dialog elements
-        this.background =
-            Object.assign(this.dialog.appendChild(document.createElement('img')), { id: 'bg' });
+        this.background = Object.assign(this.dialog.appendChild(document.createElement('img')), { id: 'bg' });
 
-        this.dialogHistory =
-            Object.assign(this.dialog.appendChild(document.createElement("article")), { id: "dialogHistory" })
-        document.head.appendChild(
-            Object.assign(document.createElement("link"), { rel: "stylesheet", href: "style/appearance.css" }));
+        this.dialogHistory = Object.assign(this.dialog.appendChild(document.createElement("article")), { id: "dialogHistory" });
+        document.head.appendChild(Object.assign(document.createElement("link"), { rel: "stylesheet", href: "style/appearance.css" }));
 
         //press l to read log
         document.addEventListener("keydown", (n) => {
             if (n.key === "l" && this.isDisplaying) {
-                this.dialogHistory.style.display =
-                    this.dialogHistory.style.display === "none" ? "initial" : "none";
+                this.dialogHistory.style.display = this.dialogHistory.style.display === "none" ? "initial" : "none";
             }
         });
     }
 
-    async loadStory(filename) {
+    async showStory(texts, num=0) {
         this.lineNum = 0;
         this.isLocked = true;
         this.text = [];
-
-        //fetch file or usethe backup ones
-        try {
-            const response = await fetch(filename);
-            const data = await response.text();
-            this.text = data.replace(/\r\n|\r|\n/g, '\n').split('\n').filter(line => line.trim() !== '');
-            this.readWords(this.lineNum);
-        } catch (error) {
-            this.text = story[filename.split(".")[0]];
-            this.readWords(this.lineNum);
+        if (typeof texts === 'string') {
+            this.text = [texts];
+        } else {
+            this.text = texts;
         }
-        //click or press space to continue
-        this.dialogBoxInstance.getBox().addEventListener('click', () => {
-            if (!this.isLocked && this.lineNum < this.text.length && !this.showingButtons) {
+        let i = 0;
+        while (i !== num && texts.length > this.lineNum) {
+            if (texts[this.lineNum] == "break")
+                i += 1;
+            this.lineNum += 1;
+        }
+        this.readWords(this.lineNum);
+        return new Promise((resolve) => {
+            const continueReading = () => {
+            if (!this.isLocked && this.lineNum < this.text.length && this.isDisplaying && this.text[this.lineNum] !== "break") {
                 this.isLocked = true;
                 this.readWords(this.lineNum);
+            } else if (this.lineNum >= this.text.length) {
+                resolve();
             }
-        });
+            };
 
-        document.addEventListener("keydown", (n) => {
-            if (n.key === " " && !this.isLocked && this.lineNum < this.text.length && !this.showingButtons) {
-                this.isLocked = true;
-                this.readWords(this.lineNum);
+            this.dialogBoxInstance.getBox().addEventListener('click', continueReading);
+
+            document.addEventListener("keydown", (n) => {
+            if (n.key === " ") {
+                continueReading();
             }
+            });
         });
     }
 
@@ -85,77 +84,20 @@ class DialogSystem {
         this.dialogHistory.appendChild(paragraph);
         this.isLocked = false;
     }
-    async showButton() {
-        this.btnContainer.buttonsArea.style.display = "initial";
-        this.showingButtons = true;
-        return new Promise((resolve) => {
-            let select = -1;
-            const handleWheelEvent = (flag) => {
-                select = flag ? select + 1 : select - 1;
-                if (select > Array.from(this.btnContainer.buttonsArea.children).length - 1) {
-                    select = 0;
-                }
-                if (select < 0) {
-                    select = Array.from(this.btnContainer.buttonsArea.children).length - 1;
-                }
-            };
 
-            document.addEventListener("wheel", handleWheelEvent, true);
-            document.addEventListener("keydown", (n) => {
-                if ((n.key === "Enter") && select != -1) {
-                    resolve(Array.from(this.btnContainer.buttonsArea.children)[select].className);
-                    this.btnContainer.clearButton();
-                    this.showingButtons = false;
-                    document.removeEventListener("keydown");
-                }
-            })
-            
-            document.addEventListener("keydown", (n) => {
-                if (n.key === "ArrowUp" || n.key === "ArrowDown") {
-                    handleWheelEvent(n.key === "ArrowDown");
-                } else if (n.key === "w" || n.key === "s") {
-                    handleWheelEvent(n.key === "s");
-                }
-            });
-            
-            for (let btn of this.btnContainer.buttonsArea.children) {
-                let num = Array.from(this.btnContainer.buttonsArea.children).indexOf(btn);
-                btn.addEventListener("mouseenter", () => {
-                    select = num;
-                });
-
-                btn.addEventListener("mouseleave", () => {
-                    select = -1; 
-                    btn.style.background = "#111111";
-                });
-                
-                ["mousemove", "wheel", "keydown"].forEach(event => {
-                    document.addEventListener(event, () => {
-                        btn.style.background = select === num ? "#555555" : "#111111";
-                    });
-                });
-
-                btn.addEventListener("click", () => {
-                    resolve(btn.className);
-                    this.btnContainer.clearButton();
-                    this.showingButtons = false;
-                });
-            }
-        });
-    }
-    show(){
+    show() {
         this.dialog.style.display = 'initial';
         this.isDisplaying = true;
     }
-    hide(){
+    hide() {
         for (let audioName in this.audioElements) {
             this.audioElements[audioName].pause();
         }
         this.dialog.style.display = 'none';
         this.isDisplaying = false;
     }
-
 }
+
 class dialogBox {
     constructor() {
         let dialog = document.getElementById("dialog");
@@ -204,16 +146,14 @@ class dialogBox {
         return new Promise((resolve) => {
             this.inputBackground.style.display = "initial";
             this.inputTxt.innerHTML = txt;
-            this.box.style.display = "none";
             this.input.focus();
             this.input.addEventListener("keydown", (n) => {
                 if (n.key === "Enter") {
                     resolve(this.input.value);
                     this.inputBackground.style.display = "none";
-                    this.box.style.display = "initial";
                 }
-            })
-        })
+            });
+        });
     }
     setColor(color) {
         this.img.style.visibility = "hidden";
@@ -459,6 +399,61 @@ class ButtonContainer {
         this.buttonsArea.appendChild(newButton);
         this.buttonElements.push(newButton);
         return newButton;
+    }
+    async showButton() {
+        this.buttonsArea.style.display = "initial";
+        return new Promise((resolve) => {
+            let select = -1;
+            const handleWheelEvent = (flag) => {
+                select = flag ? select + 1 : select - 1;
+                if (select > Array.from(this.buttonsArea.children).length - 1) {
+                    select = 0;
+                }
+                if (select < 0) {
+                    select = Array.from(this.buttonsArea.children).length - 1;
+                }
+            };
+
+            document.addEventListener("wheel", handleWheelEvent, true);
+            document.addEventListener("keydown", (n) => {
+                if ((n.key === "Enter") && select != -1) {
+                    resolve(Array.from(this.buttonsArea.children)[select].className);
+                    this.clearButton();
+                    document.removeEventListener("keydown");
+                }
+            });
+
+            document.addEventListener("keydown", (n) => {
+                if (n.key === "ArrowUp" || n.key === "ArrowDown") {
+                    handleWheelEvent(n.key === "ArrowDown");
+                } else if (n.key === "w" || n.key === "s") {
+                    handleWheelEvent(n.key === "s");
+                }
+            });
+
+            for (let btn of this.buttonsArea.children) {
+                let num = Array.from(this.buttonsArea.children).indexOf(btn);
+                btn.addEventListener("mouseenter", () => {
+                    select = num;
+                });
+
+                btn.addEventListener("mouseleave", () => {
+                    select = -1;
+                    btn.style.background = "#111111";
+                });
+
+                ["mousemove", "wheel", "keydown"].forEach(event => {
+                    document.addEventListener(event, () => {
+                        btn.style.background = select === num ? "#555555" : "#111111";
+                    });
+                });
+
+                btn.addEventListener("click", () => {
+                    resolve(btn.className);
+                    this.clearButton();
+                });
+            }
+        });
     }
 
     clearButton(name) {
