@@ -1,6 +1,7 @@
 # DialogJS Documentation
 
 A lightweight JavaScript library for creating interactive dialogue systems in games.
+(This project has become too hard to maintain)
 
 ## Table of Contents
 1. [Overview](#overview)
