@@ -1,4 +1,4 @@
-# DialogJS
+# DialogJS v1.0
 
 DialogJS is a JavaScript library designed to create and manage interactive dialog systems for web applications. It provides a flexible and easy-to-use interface for displaying dialogs, images, and audio, as well as handling user interactions through buttons and input fields.
 
