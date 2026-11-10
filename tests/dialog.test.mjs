@@ -11,6 +11,7 @@ const {
     AudioContainer,
     ButtonContainer,
     extractStorySegment,
+    parseTextTokens,
     resolveResourcePath
 } = require("../script/dialog.js");
 
@@ -162,7 +163,7 @@ function createMockDOM() {
             this.classList = new MockClassList(this);
             this.dataset = {};
             this.attributes = new Map();
-            this._style = {};
+            this._style = { filter: "" };
             this._textContent = "";
             this.scrollTop = 0;
             this.scrollHeight = 200;
@@ -366,6 +367,7 @@ test("DialogSystem initializes without duplicate stylesheets and cleans up on de
     ds.destroy();
     assert.equal(doc.getElementById("dialog"), null);
     assert.equal(doc.listenerCount("keydown"), 0);
+    assert.equal(doc.listenerCount("keyup"), 0);
 });
 
 test("DialogSystem.showStory advances, handles break, skips typing, syncs speaker, and leaks 0 listeners", async () => {
@@ -598,4 +600,209 @@ test("ButtonContainer selects via click and keyboard/wheel without listener leak
     assert.equal(btnC.buttonElements.length, 0);
     assert.equal(doc.listenerCount("keydown"), 0);
     assert.equal(doc.listenerCount("wheel"), 0);
+});
+
+test("parseTextTokens handles inlineTags opt-in and structured text chunks", () => {
+    const literal = parseTextTokens("Keep {wait:200} literal", false);
+    assert.equal(literal.plainText, "Keep {wait:200} literal");
+    assert.deepEqual(literal.tokens, [{ type: "text", value: "Keep {wait:200} literal" }]);
+
+    const tagged = parseTextTokens("Hello{wait:150}{speed:30} world!", true);
+    assert.equal(tagged.plainText, "Hello world!");
+    assert.deepEqual(tagged.tokens, [
+        { type: "text", value: "Hello" },
+        { type: "wait", ms: 150 },
+        { type: "speed", ms: 30 },
+        { type: "text", value: " world!" }
+    ]);
+
+    const chunked = parseTextTokens(["First", { pause: 250 }, " second"], false);
+    assert.equal(chunked.plainText, "First second");
+    assert.deepEqual(chunked.tokens, [
+        { type: "text", value: "First" },
+        { type: "wait", ms: 250 },
+        { type: "text", value: " second" }
+    ]);
+});
+
+test("ImageContainer focus and dim highlight speakers while respecting dimmable: false", async () => {
+    createMockDOM();
+    const imgC = new ImageContainer();
+    const bg = imgC.addImg("bg", "sunset.jpg", { dimmable: false });
+    const a = imgC.addImg("alice", "alice.png");
+    const b = imgC.addImg("bob", "bob.png");
+
+    await imgC.focus("alice", { time: 0, dimBrightness: 0.5 });
+    assert.equal(bg.style.filter, "");
+    assert.equal(a.style.filter, "");
+    assert.equal(b.style.filter, "brightness(0.5)");
+
+    // Array empty dims all dimmable sprites (e.g. narration)
+    await imgC.focus([], { time: 0, dimBrightness: 0.4 });
+    assert.equal(bg.style.filter, "");
+    assert.equal(a.style.filter, "brightness(0.4)");
+    assert.equal(b.style.filter, "brightness(0.4)");
+
+    // Passing null restores all dimmable sprites
+    await imgC.focus(null, { time: 0 });
+    assert.equal(a.style.filter, "");
+    assert.equal(b.style.filter, "");
+});
+
+test("DialogSystem.showStory executes multi-speaker beats, stage directives, hooks, and { break: true }", async () => {
+    createMockDOM();
+    const ds = new DialogSystem({ typingSpeed: 0, inlineTags: true });
+    ds.show();
+    ds.imgContainer.addImg("a", "a.png");
+    ds.imgContainer.addImg("b", "b.png");
+
+    let entered = 0;
+    let exited = 0;
+    const box = ds.dialogBoxInstance.getBox();
+
+    const beats = [
+        {
+            speaker: "Alice",
+            background: "sunset.jpg",
+            focus: "a",
+            focusOptions: { time: 0 },
+            text: "Hello!",
+            onEnter: () => { entered += 1; },
+            onExit: () => { exited += 1; }
+        },
+        {
+            images: { b: { move: [192, 0], time: 0 } },
+            wait: 0
+        },
+        {
+            speaker: "",
+            focus: [],
+            focusOptions: { time: 0 },
+            text: "Narration line.",
+            append: false
+        },
+        { break: true },
+        { speaker: "Bob", text: "After break" }
+    ];
+
+    const p0 = ds.showStory(beats, 0);
+    await new Promise((r) => setTimeout(r, 10));
+    assert.equal(ds.speaker, "Alice");
+    assert.equal(ds.background.style.visibility, "visible");
+    assert.equal(ds.imgContainer.getImg("b").style.filter, "brightness(0.55)");
+    assert.equal(entered, 1);
+    assert.equal(box.textContent, "Hello!");
+
+    // Click advances past Alice -> runs stage-only beat (moves b) -> displays Narration
+    box.click();
+    await new Promise((r) => setTimeout(r, 10));
+    assert.equal(exited, 1);
+    assert.equal(ds.imgContainer.getImg("b").style.left, "10%");
+    assert.equal(ds.speaker, "");
+    assert.equal(ds.dialogBoxInstance.nametag.style.display, "none");
+    assert.equal(box.textContent, "Narration line.");
+
+    // Click resolves part 0 at { break: true }
+    box.click();
+    await p0;
+
+    // History omitted colon for empty speaker narration
+    const entries = ds.dialogHistory.querySelectorAll("section");
+    assert.equal(entries.length, 2);
+    assert.equal(entries[0].textContent, "Alice: Hello!");
+    assert.equal(entries[1].textContent, "Narration line.");
+
+    const p1 = ds.showStory(beats, 1);
+    assert.equal(ds.speaker, "Bob");
+    assert.equal(box.textContent, "After break");
+    box.click();
+    await p1;
+    ds.destroy();
+});
+
+test("DialogSystem autoPlay, skipMode, HUD controls, and ButtonContainer alignment work cleanly", async () => {
+    createMockDOM();
+    const ds = new DialogSystem({
+        typingSpeed: 0,
+        autoPlay: false,
+        autoDelay: 20,
+        skipDelay: 10,
+        controls: true,
+        buttonAlign: "left"
+    });
+    ds.show();
+
+    assert.equal(ds.btnContainer.buttonsArea.getAttribute("data-align"), "left");
+    ds.btnContainer.setAlignment("right");
+    assert.equal(ds.btnContainer.buttonsArea.getAttribute("data-align"), "right");
+
+    const autoBtn = ds.controlsBar.querySelector("button");
+    assert.ok(autoBtn);
+
+    // Enable autoPlay and watch multi-line story complete automatically
+    ds.setAutoPlay(true, 15);
+    assert.ok(ds._controlButtons.auto.classList.contains("active"));
+    await ds.showStory(["Auto 1", "Auto 2"]);
+    assert.equal(ds.dialogBoxInstance.box.textContent, "Auto 2");
+
+    // Skip mode fast-forwards and stops automatically when showButton opens (stopSkipOnChoice)
+    ds.setAutoPlay(false);
+    ds.setSkipMode(true);
+    await ds.showStory(["Skip 1", "Skip 2", "Skip 3"]);
+    assert.equal(ds.skipMode, true);
+
+    ds.btnContainer.addButton("opt1", "Option 1");
+    const choicePromise = ds.btnContainer.showButton();
+    assert.equal(ds.skipMode, false);
+    ds.btnContainer.buttonElements[0].click();
+    assert.equal(await choicePromise, "opt1");
+
+    ds.destroy();
+});
+
+test("DialogSystem exportState and importState round-trip JSON snapshot faithfully", async () => {
+    createMockDOM();
+    const ds1 = new DialogSystem({ typingSpeed: 0 });
+    ds1.show();
+    ds1.setBackground("sunset.jpg");
+    ds1.setSpeaker("Guide");
+    ds1.dialogBoxInstance.setColor("#112233");
+    ds1.imgContainer.addImg("hero", "bocchi.jpg", { dimmable: true });
+    ds1.imgContainer.setAppearance("hero", { left: 960, top: 540, width: 400, height: 600, zIndex: 2, opacity: 0.8 });
+    await ds1.imgContainer.rotate("hero", 30, 0);
+    await ds1.imgContainer.dim("hero", true, { brightness: 0.5, time: 0 });
+    ds1.audContainer.addAudio("bgm", "Music.mp3", { loop: true, volume: 0.7 });
+    ds1.audContainer.audPlay("bgm", 0, 0);
+
+    const storyPromise = ds1.showStory(["Saved line"]);
+    const snapshotJson = JSON.stringify(ds1.exportState());
+    ds1.dialogBoxInstance.getBox().click();
+    await storyPromise;
+    ds1.destroy();
+
+    // Restore into a fresh DialogSystem instance
+    createMockDOM();
+    const ds2 = new DialogSystem({ typingSpeed: 0 });
+    ds2.importState(JSON.parse(snapshotJson));
+
+    assert.equal(ds2.isDisplaying, true);
+    assert.equal(ds2.speaker, "Guide");
+    assert.equal(ds2.background.getAttribute("src") || ds2.background.src, "resources/sunset.jpg");
+    assert.equal(ds2.dialogBoxInstance.box.textContent, "Saved line");
+    assert.equal(ds2.dialogBoxInstance.box.style.backgroundColor, "#112233");
+
+    const hero2 = ds2.imgContainer.getImg("hero");
+    assert.equal(hero2.style.left, "50%");
+    assert.equal(hero2.style.top, "50%");
+    assert.equal(hero2.style.opacity, "0.8");
+    assert.equal(hero2.style.filter, "brightness(0.5)");
+    assert.equal(hero2.style.transform, "rotate(30deg) skew(0deg, 0deg) scale(1, 1)");
+
+    const bgm2 = ds2.audContainer.getAudio("bgm");
+    assert.equal(bgm2.loop, true);
+    assert.equal(bgm2.volume, 0.7);
+    assert.equal(bgm2.paused, false);
+    assert.equal(ds2.dialogHistory.querySelectorAll("section").length, 1);
+
+    ds2.destroy();
 });

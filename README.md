@@ -1,15 +1,14 @@
 # DialogJS
 
-DialogJS is a lightweight, zero-dependency JavaScript library for building interactive visual novels and dialog systems for the web. It manages typed dialog playback, character/background layering and animations, audio fades, branching choices, user input prompts, and a toggleable dialog history log.
+DialogJS is a lightweight, zero-dependency JavaScript library for building interactive dialog systems and visual novels for the web. It works directly via a `<script>` tag with no build step, and keeps its primitives composable and general-purpose.
 
 ## Features
 
-- **Typewriter Dialog & Story Segments**: Async/await `showStory()` with click/Space/Enter skip-to-complete, advancing, and `"break"`-delimited story parts.
-- **Image Staging & Composable Animations**: Position assets on a responsive 16:9 (`1920x1080`) virtual stage and animate `move`, `scale`, `skew`, `rotate`, and `fadeIn`/`fadeOut` concurrently with easing support (`linear`, `easeIn`, `easeOut`, `easeInOut`) without transforms overwriting one another.
-- **Audio Management**: Play/stop audio with smooth millisecond fades, timed auto-pause, looping, and volume control.
-- **Branching Choices**: Keyboard (`ArrowUp`/`ArrowDown`, `W`/`S`, `Enter`), mouse wheel, and click support.
-- **User Input Prompts**: Built-in `getMessage()` prompt overlay with IME-safe `Enter` submission and clickable confirmation.
-- **Dialog History Log**: Press `L` to open/close the scrollable transcript (`Esc` or Close button also dismisses it).
+- **Flexible `showStory()` Runner**: Accepts plain strings, `"break"`-delimited segments, or declarative multi-speaker stage beats (`{ speaker, text, focus, images, audio, background, delay, speed, append, onEnter, onExit }`).
+- **Typewriter, Inline Pauses, Auto & Skip**: Click/`Space`/`Enter` to skip or advance, optional `{wait:ms}` / `{speed:ms}` inline tags (or structured text arrays), `Auto` playback, `Skip` mode, and `Ctrl` hold-to-skip.
+- **Composable Stage Animations & Focus**: Position images on a responsive 16:9 (`1920x1080`) virtual canvas and animate `move`, `scale`, `skew`, `rotate`, `fadeTo`, `dim`, and `focus` concurrently without CSS transforms or filters overwriting one another.
+- **Customizable CSS Layout**: Styled via CSS custom properties (`--dialog-height`, `--dialog-bottom`, `--buttons-width`, `--accent-color`, etc.) with `center` / `left` / `right` choice alignments.
+- **Audio, Prompts, History & State Snapshots**: Millisecond fade-in/fade-out audio, IME-safe `getMessage()` input prompts, `L`/`Esc` dialog history log, optional HUD controls, and JSON-serializable `exportState()` / `importState()` for external save systems.
 
 ## Installation
 
@@ -25,21 +24,29 @@ Include the stylesheet and script in your HTML:
 ## Quick Start
 
 ```javascript
-const dialogSystem = new DialogSystem({
+const dialog = new DialogSystem({
     resourcePath: "resources/",
     typingSpeed: 15,
-    defaultSpeaker: "Guide"
+    controls: true,       // optional Auto / Skip / Log HUD bar
+    inlineTags: true,     // enable {wait:ms} and {speed:ms} tags
+    buttonAlign: "center" // "center" | "left" | "right"
 });
 
-dialogSystem.show();
-await dialogSystem.showStory([
+dialog.show();
+
+// Plain strings & "break" segments still work out of the box
+await dialog.showStory([
     "Hello, welcome to our story!",
-    "Click or press Space to skip typing or advance.",
     "break",
     "This is part 1, played after the break."
 ], 0);
 
-await dialogSystem.showStory(texts, 1);
+// Or multi-speaker declarative beats
+await dialog.showStory([
+    { speaker: "Alice", text: "Did you hear that?{wait:300} Wait...", focus: "alice" },
+    { speaker: "Bob", text: "Stay right there.", focus: "bob" },
+    { speaker: "", focus: [], text: "Silence fell over the room." } // empty speaker hides nametag
+]);
 ```
 
 ## API Overview
@@ -48,45 +55,67 @@ await dialogSystem.showStory(texts, 1);
 
 - `new DialogSystem(options?)`
   - `container`: Target element or CSS selector (defaults to `main`, falling back to `document.body`).
-  - `resourcePath`: Base folder prepended to relative image/audio paths (default `"resources/"`).
+  - `resourcePath`: Base folder prepended to relative asset paths (default `"resources/"`).
   - `stylesheetPath`: CSS path auto-injected if not already loaded (default `"style/appearance.css"`, or `null` to disable).
   - `typingSpeed`: Delay in ms per character (default `15`; `0` renders instantly).
   - `defaultSpeaker`: Initial speaker label (default `"someone"`).
+  - `autoPlay` / `autoDelay`: Auto-advance toggle and delay in ms (default `false`, `1500`).
+  - `skipMode` / `skipDelay` / `holdCtrlToSkip` / `stopSkipOnChoice`: Fast-forward behavior.
+  - `inlineTags`: Parse `{wait:ms}` / `{pause:ms}` / `{speed:ms}` in dialogue strings (default `false`; array text chunks `["Hi", { wait: 300 }, "!"]` always work).
+  - `controls`: `false` (default), `true`, or `{ log, auto, skip }` to render built-in HUD controls.
+  - `buttonAlign`: Default choice alignment (`"center"`, `"left"`, or `"right"`).
 - `show()` / `hide()` / `destroy()`
-- `showStory(texts, partIndex = 0)` — Returns a `Promise` that resolves once the user advances past the end of the segment (or reaches `"break"`).
-- `setSpeaker(name)` — Updates both the `#nametag` and `dialogSystem.speaker` used in the history log.
-- `setBackground(src)` — Sets or clears the `#bg` backdrop image.
-- `setTypingSpeed(ms)` — Adjusts typing speed at runtime.
+- `showStory(texts, partIndex = 0)` — Accepts strings, `"break"` / `{ break: true }`, or beat objects. Returns a `Promise<void>`.
+- `setSpeaker(name)` / `setBackground(src)` / `setTypingSpeed(ms)`
+- `setAutoPlay(enabled, delayMs?)` / `toggleAutoPlay()`
+- `setSkipMode(enabled)` / `toggleSkipMode()`
 - `toggleHistory(force?)` / `clearHistory()`
+- `on(event, handler)` / `off(event, handler)` — Events: `show`, `hide`, `speakerChange`, `lineStart`, `lineComplete`, `autoChange`, `skipChange`, `historyChange`.
+- `exportState()` / `importState(snapshot, options?)` — Portable JSON snapshot of stage state, images, audio, and history.
 
 ### `ImageContainer` (`dialogSystem.imgContainer`)
 
-- `addImg(name, src)` / `getImg(name)` / `removeImg(name)`
-- `setAppearance(name, { left, top, zIndex, width, height, opacity })` — Coordinates map to a `1920x1080` virtual canvas (partial updates supported).
-- `move(name, deltaX, deltaY, time = 0, easing = "linear")` — Returns a `Promise`.
-- `scale(name, w, h, time = 0, easing = "linear")` — Returns a `Promise`.
-- `skew(name, angleX, angleY, time = 0, easing = "linear")` — Returns a `Promise`.
-- `rotate(name, angle, time = 0, easing = "linear")` — Returns a `Promise`.
+- `addImg(name, src, { dimmable, visible }?)` / `getImg(name)` / `showImg(name)` / `hideImg(name)` / `removeImg(name)`
+- `setAppearance(name, { left, top, zIndex, width, height, opacity })` — `1920x1080` virtual coordinates (partial updates supported).
+- `move(name, deltaX, deltaY, time = 0, easing = "linear")`
+- `scale(name, w, h, time = 0, easing = "linear")`
+- `skew(name, angleX, angleY, time = 0, easing = "linear")`
+- `rotate(name, angle, time = 0, easing = "linear")`
 - `fadeIn(name, time = 0.5)` / `fadeOut(name, time = 0.5)` / `fadeTo(name, opacity, time = 0.5, easing = "linear")`
-- `setTransform(name, { scaleX, scaleY, skewX, skewY, rotate })`
+- `dim(name, dimmed = true, { brightness, time, easing }?)`
+- `focus(activeNames, { activeBrightness, dimBrightness, time, easing, targets, exclude }?)` — Pass `null` to restore all dimmable sprites to full brightness, `[]` to dim all, or name(s) to spotlight.
+- `setTransform(name, partial)` / `setFilter(name, cssFilter)`
 
 ### `AudioContainer` (`dialogSystem.audContainer`)
 
 - `addAudio(name, src, { loop, volume, preload }?)` / `getAudio(name)` / `removeAudio(name)`
-- `audPlay(name, time = 0, fade = 0, options?)` — `time` is auto-pause duration in **seconds** (`0` = play without timer), `fade` is fade-in duration in **milliseconds**. Returns a `Promise`.
-- `audStop(name, fade = 0)` — `fade` is fade-out duration in **milliseconds**. Returns a `Promise`.
+- `audPlay(name, time = 0, fade = 0, options?)` — `time` in **seconds** (`0` = no auto-pause), `fade` in **milliseconds**.
+- `audStop(name, fade = 0)` — `fade` in **milliseconds**.
 - `setVolume(name, volume)` / `pauseAll()` / `stopAll()`
 
 ### `ButtonContainer` (`dialogSystem.btnContainer`)
 
-- `addButton(value, text)`
-- `showButton()` — Displays choices and returns a `Promise` resolving to the chosen `value` (or `null` if cleared/empty).
-- `clearButton(name?)` — Removes a specific button by `value`, or clears and hides all buttons when omitted.
+- `addButton(value, text)` / `setAlignment("center" | "left" | "right")`
+- `showButton(options?)` — Returns a `Promise` resolving to the chosen `value` (or `null` if cleared/empty).
+- `clearButton(name?)`
 
 ### `dialogBox` (`dialogSystem.dialogBoxInstance`)
 
 - `setColor(color)` / `setImg(source)` / `setText(text)` / `setSpeaker(name)`
-- `getMessage(promptText, defaultValue = "")` — Prompts for user input and resolves with the entered string.
+- `getMessage(promptText, defaultValue = "")`
+
+## CSS Variables (`style/appearance.css`)
+
+Override variables on `#dialog` to restyle without fighting selector specificity:
+
+```css
+#dialog {
+    --dialog-height: 31%;
+    --dialog-bottom: 5%;
+    --buttons-width: min(52%, 28em);
+    --accent-color: #4f46e5;
+}
+```
 
 ## Running Tests
 
